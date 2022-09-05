@@ -1,8 +1,9 @@
+use std::result;
 mod simpleSkidSteer;
 trait Driver {
     /// enable the car. do whatever neccicary to get the driver ready to drive
     /// run this before trying to run any other functions.
-    fn enable(&mut self) -> Result<(), DriverError>;
+    fn enable(&mut self) -> Result<()>;
     /// is the driver enabled and ready for communication?
     fn is_ready(&self) -> bool;
     /// drive funtion.
@@ -11,11 +12,11 @@ trait Driver {
     /// so a value of 2 would have the same effect as a value of 1.
     /// 1 for full speed ahead, 0 for no change, -1 is reverse/brake.
     /// -1 for full steer left, 1 for full speed right.
-    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<(), DriverError>;
+    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()>;
     /// stop the car, no mater what.
     /// this is sort of like an e-stop.
     /// this should get pulled as a fialsafe.
-    fn estop(&mut self) -> Result<(), DriverError>;
+    fn estop(&mut self) -> Result<()>;
     /// returns true if the vichle has a brake.
     fn has_break(&self) -> bool;
     /// returns a tuple for if the veicle has proportional controls
@@ -25,7 +26,7 @@ trait Driver {
     /// this is for a controlled stutdown, and is as calm as possible
     /// this is for when you hit the 'end' button
     /// FIXME
-    fn disable(mut self) -> Result<(), DriverError>;
+    fn disable(&mut self) -> Result<()>;
 }
 /// any error that can return of attempting to use the above funtions
 enum DriverError {
@@ -49,3 +50,4 @@ impl From<rppal::gpio::Error> for DriverError {
         DriverError::Gpio(e)
     }
 }
+type Result<T> = result::Result<T, DriverError>;

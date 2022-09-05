@@ -1,4 +1,4 @@
-use crate::drivers::{Driver, DriverError};
+use crate::drivers::{Driver, DriverError, Result};
 use rppal::gpio::{Gpio, OutputPin};
 // simple skid steer car using L298P drivers
 struct SkidSteer {
@@ -29,12 +29,12 @@ struct SkidSteer {
 }
 
 impl Driver for SkidSteer {
-    fn enable(&mut self) -> Result<(), DriverError> {
+    fn enable(&mut self) -> Result<()> {
         self.gpio = Gpio::new()?;
         self.ena = Some(self.gpio.get(self.ena_pin)?.into_output());
         self.enb = Some(self.gpio.get(self.enb_pin)?.into_output());
         self.rva = Some(self.gpio.get(self.rva_pin)?.into_output());
-        self.rva = Some(self.gpio.get(self.rva_pin)?.into_output());
+        self.rva = Some(self.gpio.get(self.rvb_pin)?.into_output());
         self.is_enabled = true;
         Ok(())
     }
@@ -47,27 +47,53 @@ impl Driver for SkidSteer {
     fn is_proportional(&self) -> (bool, bool) {
         (true, true)
     }
-    fn estop(&mut self) -> Result<(), DriverError> {
+    fn estop(&mut self) -> Result<()> {
         if self.is_enabled {
             return Err(DriverError::NotEnabled);
         }
         // FIXME
         self.ena
-            .expect("is_enabled was true but no enabale struct found")
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
             .set_low();
         self.enb
-            .expect("is_enabled was true but no emable struct found")
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
             .set_low();
         Ok(())
     }
-    fn disable(mut self) -> Result<(), DriverError> {
+    fn disable(&mut self) -> Result<()> {
         self.estop()?;
         Ok(())
     }
-    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<(), DriverError> {
+    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
         if !(0.0..1.0).contains(&accelerate) || !(-1.0..1.0).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
+        if self.is_enabled {
+            return Err(DriverError::NotEnabled);
+        }
+
+        let left = (accelerate - steer).clamp(-1.0, 1.0);
+        let right = (accelerate + steer).clamp(-1.0, 1.0);
+
+        self.rva
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
+            .write(left.is_sign_negative().into());
+        self.rvb
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
+            .write(right.is_sign_negative().into());
+        self.ena
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
+            .set_pwm_frequency(100.0, left.abs())?;
+        self.enb
+            .as_mut()
+            .expect("is_enabled was true but no enable struct found")
+            .set_pwm_frequency(100.0, left.abs())?;
+
         Ok(())
     }
 }
