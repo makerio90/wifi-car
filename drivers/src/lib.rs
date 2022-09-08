@@ -25,7 +25,6 @@ trait Driver {
     /// soft stop.
     /// this is for a controlled stutdown, and is as calm as possible
     /// this is for when you hit the 'end' button
-    /// FIXME
     fn disable(&mut self) -> Result<()>;
 }
 /// any error that can return of attempting to use the above funtions
@@ -36,15 +35,13 @@ enum DriverError {
     /// you tried to pass a function a number that was out of its range.
     /// it will usualy still work, just not how you may expect it to.
     OutOfRange,
-    /// an intarnal error occured with the math of the function.
-    /// just try again.
-    Math,
-    /// its not going to do what you might expect, but thats not your fault,
-    /// its just being weird
-    Info(String),
+    /// internal error, expected a value of Some<T> found None.
+    /// best to panic!
+    ExpectedSomeFoundNone,
     /// gpio error
     Gpio(rppal::gpio::Error),
 }
+/// TODO: better way to impl this?
 impl From<rppal::gpio::Error> for DriverError {
     fn from(e: rppal::gpio::Error) -> DriverError {
         DriverError::Gpio(e)

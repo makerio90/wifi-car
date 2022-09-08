@@ -25,16 +25,56 @@ struct SkidSteer {
     /// output pin object for driver b reverse pin
     rvb: Option<OutputPin>,
     /// gpio object
-    gpio: Gpio,
+    gpio: Option<Gpio>,
 }
 
+impl SkidSteer {
+    fn new(ena_pin: u8, enb_pin: u8, rva_pin: u8, rvb_pin: u8) -> Self {
+        Self {
+            ena_pin,
+            enb_pin,
+            rva_pin,
+            rvb_pin,
+            is_enabled: false,
+            ena: None,
+            enb: None,
+            rva: None,
+            rvb: None,
+            gpio: None,
+        }
+    }
+}
+/// cant take in `self` for some reson :/
+/// TODO: make this better
+fn expect_as_mut<T>(option: &mut Option<T>) -> Result<&mut T> {
+    match option.as_mut() {
+        Some(v) => Ok(v),
+        None => Err(DriverError::ExpectedSomeFoundNone),
+    }
+}
 impl Driver for SkidSteer {
     fn enable(&mut self) -> Result<()> {
-        self.gpio = Gpio::new()?;
-        self.ena = Some(self.gpio.get(self.ena_pin)?.into_output());
-        self.enb = Some(self.gpio.get(self.enb_pin)?.into_output());
-        self.rva = Some(self.gpio.get(self.rva_pin)?.into_output());
-        self.rva = Some(self.gpio.get(self.rvb_pin)?.into_output());
+        self.gpio = Some(Gpio::new()?);
+        self.ena = Some(
+            expect_as_mut(&mut self.gpio)?
+                .get(self.ena_pin)?
+                .into_output(),
+        );
+        self.enb = Some(
+            expect_as_mut(&mut self.gpio)?
+                .get(self.enb_pin)?
+                .into_output(),
+        );
+        self.rva = Some(
+            expect_as_mut(&mut self.gpio)?
+                .get(self.rva_pin)?
+                .into_output(),
+        );
+        self.rva = Some(
+            expect_as_mut(&mut self.gpio)?
+                .get(self.rvb_pin)?
+                .into_output(),
+        );
         self.is_enabled = true;
         Ok(())
     }
@@ -51,15 +91,8 @@ impl Driver for SkidSteer {
         if self.is_enabled {
             return Err(DriverError::NotEnabled);
         }
-        // FIXME
-        self.ena
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .set_low();
-        self.enb
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .set_low();
+        expect_as_mut(&mut self.ena)?.set_low();
+        expect_as_mut(&mut self.enb)?.set_low();
         Ok(())
     }
     fn disable(&mut self) -> Result<()> {
@@ -77,22 +110,10 @@ impl Driver for SkidSteer {
         let left = (accelerate - steer).clamp(-1.0, 1.0);
         let right = (accelerate + steer).clamp(-1.0, 1.0);
 
-        self.rva
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .write(left.is_sign_negative().into());
-        self.rvb
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .write(right.is_sign_negative().into());
-        self.ena
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .set_pwm_frequency(100.0, left.abs())?;
-        self.enb
-            .as_mut()
-            .expect("is_enabled was true but no enable struct found")
-            .set_pwm_frequency(100.0, left.abs())?;
+        expect_as_mut(&mut self.rva)?.write(left.is_sign_negative().into());
+        expect_as_mut(&mut self.rvb)?.write(right.is_sign_negative().into());
+        expect_as_mut(&mut self.ena)?.set_pwm_frequency(100.0, left.abs())?;
+        expect_as_mut(&mut self.enb)?.set_pwm_frequency(100.0, left.abs())?;
 
         Ok(())
     }

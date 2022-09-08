@@ -1,6 +1,6 @@
 [package]
-name = "wificar-on-a-budget"
-version = "0.0.1"
+name = "drivers"
+version = "0.1.0"
 edition = "2021"
 authors = ['makerio']
 readme = 'README.md'
