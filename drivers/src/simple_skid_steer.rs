@@ -29,7 +29,7 @@ struct SkidSteer {
 }
 
 impl SkidSteer {
-    fn new(ena_pin: u8, enb_pin: u8, rva_pin: u8, rvb_pin: u8) -> Self {
+    pub fn new(ena_pin: u8, enb_pin: u8, rva_pin: u8, rvb_pin: u8) -> Self {
         Self {
             ena_pin,
             enb_pin,
