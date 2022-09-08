@@ -1,7 +1,7 @@
 use crate::{Driver, DriverError, Result};
 use rppal::gpio::{Gpio, OutputPin};
 // simple skid steer car using L298P drivers
-struct SkidSteer {
+pub struct SkidSteer {
     /// motor driver a enable pin
     /// pwm support is not yet supported, softpwm is used.
     /// TODO: allow for pwm enable pins

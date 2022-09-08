@@ -1,5 +1,8 @@
 use std::result;
 mod simple_skid_steer;
+pub enum Drivers {
+    SimpleSkidSteer(simple_skid_steer::SkidSteer),
+}
 trait Driver {
     /// enable the car. do whatever neccicary to get the driver ready to drive
     /// run this before trying to run any other functions.
