@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 drivers = {path = '../drivers/'}
+shrust = "0.0.7"

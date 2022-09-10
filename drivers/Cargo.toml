@@ -14,3 +14,4 @@ interface for controlling a car/rover over wifi
 
 [dependencies]
 rppal = { git='https://github.com/makerio90/rppal/', branch='patch-1'}
+serde = { version = "1.0.144", features = ["derive"] }
