@@ -4,6 +4,7 @@ mod simple_skid_steer;
 
 pub enum Drivers {
     SimpleSkidSteer(simple_skid_steer::SkidSteer),
+    Demo(demo::Demo),
 }
 
 trait Driver {
