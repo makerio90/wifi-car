@@ -992,6 +992,9 @@ dependencies = [
 [[package]]
 name = "shell"
 version = "0.1.0"
+dependencies = [
+ "drivers",
+]
 
 [[package]]
 name = "signal-hook-registry"
