@@ -4,6 +4,11 @@ use crate::{Driver, DriverError, Result};
 pub struct Demo {
     enabled: bool,
 }
+impl Demo {
+    pub fn new() -> Self {
+        Demo { enabled: false }
+    }
+}
 impl Driver for Demo {
     fn enable(&mut self) -> Result<()> {
         self.enabled = true;
@@ -14,7 +19,7 @@ impl Driver for Demo {
         self.enabled
     }
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(0.0..1.0).contains(&accelerate) || !(-1.0..1.0).contains(&steer) {
+        if !(0.0..1.1).contains(&accelerate) || !(-1.0..1.1).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
         if self.enabled {
@@ -28,7 +33,7 @@ impl Driver for Demo {
         };
         let amount = steer.abs() * 100.0;
         println!(
-            "sent command to drive at speed {}% and steer {} {}",
+            "got command to drive at speed {}% and steer {} {}",
             speed, dir, amount
         );
         Ok(())
