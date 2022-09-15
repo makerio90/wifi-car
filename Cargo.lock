@@ -530,7 +530,7 @@ dependencies = [
 
 [[package]]
 name = "drivers"
-version = "1.0.0"
+version = "0.2.0"
 dependencies = [
  "rppal",
  "serde",

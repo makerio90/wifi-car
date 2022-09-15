@@ -1,4 +1,4 @@
-use drivers::Drivers;
+use drivers::drivers::Drivers;
 
 fn main() {
     let name_of_driver = "simpleSkidSteer";

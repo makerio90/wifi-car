@@ -1,6 +1,6 @@
 use std::result;
-mod drivers;
-trait Driver {
+pub mod drivers;
+pub trait Driver {
     /// enable the car. do whatever neccicary to get the driver ready to drive
     /// run this before trying to run any other functions.
     fn enable(&mut self) -> Result<()>;
@@ -28,7 +28,8 @@ trait Driver {
     fn disable(&mut self) -> Result<()>;
 }
 /// any error that can return of attempting to use the above funtions
-enum DriverError {
+#[derive(Debug)]
+pub enum DriverError {
     /// you tried to run a function but the driver was not enabled.
     /// dont `panic!` just enable the driver.
     NotEnabled,

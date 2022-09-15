@@ -1,11 +1,10 @@
-use crate::{Driver, DriverError, Result};
-mod demo;
-mod simple_skid_steer;
+use crate::{Driver, Result};
+pub mod demo;
+pub mod simple_skid_steer;
 pub enum Drivers {
     SimpleSkidSteer(simple_skid_steer::SkidSteer),
     Demo(demo::Demo),
 }
-
 impl Driver for Drivers {
     fn enable(&mut self) -> Result<()> {
         match self {
