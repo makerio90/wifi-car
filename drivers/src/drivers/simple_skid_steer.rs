@@ -44,34 +44,34 @@ impl SkidSteer {
         }
     }
 }
-/// cant take in `self` for some reson :/
-/// TODO: make this better
-fn expect_as_mut<T>(option: &mut Option<T>) -> Result<&mut T> {
-    match option.as_mut() {
-        Some(v) => Ok(v),
-        None => Err(DriverError::ExpectedSomeFoundNone),
-    }
-}
 impl Driver for SkidSteer {
     fn enable(&mut self) -> Result<()> {
         self.gpio = Some(Gpio::new()?);
         self.ena = Some(
-            expect_as_mut(&mut self.gpio)?
+            self.gpio
+                .as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
                 .get(self.ena_pin)?
                 .into_output(),
         );
         self.enb = Some(
-            expect_as_mut(&mut self.gpio)?
+            self.gpio
+                .as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
                 .get(self.enb_pin)?
                 .into_output(),
         );
         self.rva = Some(
-            expect_as_mut(&mut self.gpio)?
+            self.gpio
+                .as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
                 .get(self.rva_pin)?
                 .into_output(),
         );
         self.rva = Some(
-            expect_as_mut(&mut self.gpio)?
+            self.gpio
+                .as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
                 .get(self.rvb_pin)?
                 .into_output(),
         );
@@ -91,8 +91,14 @@ impl Driver for SkidSteer {
         if self.is_enabled {
             return Err(DriverError::NotEnabled);
         }
-        expect_as_mut(&mut self.ena)?.set_low();
-        expect_as_mut(&mut self.enb)?.set_low();
+        self.ena
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .set_low();
+        self.enb
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .set_low();
         Ok(())
     }
     fn disable(&mut self) -> Result<()> {
@@ -110,10 +116,22 @@ impl Driver for SkidSteer {
         let left = (accelerate - steer).clamp(-1.0, 1.0);
         let right = (accelerate + steer).clamp(-1.0, 1.0);
 
-        expect_as_mut(&mut self.rva)?.write(left.is_sign_negative().into());
-        expect_as_mut(&mut self.rvb)?.write(right.is_sign_negative().into());
-        expect_as_mut(&mut self.ena)?.set_pwm_frequency(100.0, left.abs())?;
-        expect_as_mut(&mut self.enb)?.set_pwm_frequency(100.0, left.abs())?;
+        self.rva
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .write(left.is_sign_negative().into());
+        self.rvb
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .write(right.is_sign_negative().into());
+        self.ena
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .set_pwm_frequency(100.0, left.abs())?;
+        self.enb
+            .as_mut()
+            .ok_or(DriverError::ExpectedSomeFoundNone)?
+            .set_pwm_frequency(100.0, left.abs())?;
 
         Ok(())
     }
