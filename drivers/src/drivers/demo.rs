@@ -9,6 +9,11 @@ impl Demo {
         Demo { enabled: false }
     }
 }
+impl Default for Demo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Driver for Demo {
     fn enable(&mut self) -> Result<()> {
         self.enabled = true;
@@ -19,22 +24,28 @@ impl Driver for Demo {
         self.enabled
     }
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(0.0..1.1).contains(&accelerate) || !(-1.0..1.1).contains(&steer) {
+        if !(-1.0..1.1).contains(&accelerate) || !(-1.0..1.1).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
         if self.enabled {
             return Err(DriverError::NotEnabled);
         }
-        let speed = accelerate * 100.0;
-        let dir = if steer.is_sign_negative() {
+        let drive_speed = accelerate.abs() * 100.0;
+        let steer_amount = steer.abs() * 100.0;
+        let drive_dir = if accelerate.is_sign_negative() {
+            "backward"
+        } else {
+            "forward"
+        };
+
+        let steer_dir = if steer.is_sign_negative() {
             "left"
         } else {
             "right"
         };
-        let amount = steer.abs() * 100.0;
         println!(
-            "got command to drive at speed {}% and steer {} {}",
-            speed, dir, amount
+            "got command to drive {} at speed {}% and steer {} {}",
+            drive_dir, drive_speed, steer_dir, steer_amount
         );
         Ok(())
     }
