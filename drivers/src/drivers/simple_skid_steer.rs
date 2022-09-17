@@ -116,7 +116,7 @@ impl Driver for SkidSteer {
 
         let left = (accelerate - steer).clamp(-1.0, 1.0);
         let right = (accelerate + steer).clamp(-1.0, 1.0);
-        println!("{:?}", self);
+        println!("{:#?}", self);
         self.rva
             .as_mut()
             .ok_or(DriverError::ExpectedSomeFoundNone)?
