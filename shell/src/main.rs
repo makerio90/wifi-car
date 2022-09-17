@@ -1,4 +1,5 @@
 use drivers::drivers::demo::Demo;
+use drivers::drivers::simple_skid_steer::SkidSteer;
 use drivers::drivers::Drivers;
 use drivers::Driver;
 use shrust::{Shell, ShellIO};
@@ -17,17 +18,8 @@ fn main() {
     shell.new_command("set", "set the driver", 1, |io, driver, select| {
         match select[0] {
             "demo" => *driver = Some(Drivers::Demo(Demo::new())),
-            /*
-             *TODO: make this work
-            "skidSteer" => {
-                *driver = Some(Drivers::SimpleSkidSteer(SkidSteer::new(
-                    select[1].into(),
-                    select[2].into(),
-                    select[3].into(),
-                    select[4].into(),
-                )))
-            }
-            */
+            // TODO: dynamicly set pin numbers
+            "skidSteer" => *driver = Some(Drivers::SimpleSkidSteer(SkidSteer::new(0, 6, 5, 12))),
             _ => writeln!(io, "that is not a driver")?,
         }
         Ok(())
