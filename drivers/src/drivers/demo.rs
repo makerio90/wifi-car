@@ -27,7 +27,7 @@ impl Driver for Demo {
         if !(-1.0..1.1).contains(&accelerate) || !(-1.0..1.1).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
-        if self.enabled {
+        if !self.enabled {
             return Err(DriverError::NotEnabled);
         }
         let drive_speed = accelerate.abs() * 100.0;
@@ -60,6 +60,7 @@ impl Driver for Demo {
         (true, true)
     }
     fn disable(&mut self) -> Result<()> {
+        self.enabled = false;
         println!("disabled");
         Ok(())
     }
