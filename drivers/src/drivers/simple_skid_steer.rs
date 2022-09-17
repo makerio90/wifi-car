@@ -69,7 +69,7 @@ impl Driver for SkidSteer {
                 .get(self.rva_pin)?
                 .into_output(),
         );
-        self.rva = Some(
+        self.rvb = Some(
             self.gpio
                 .as_mut()
                 .ok_or(DriverError::ExpectedSomeFoundNone)?
