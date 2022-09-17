@@ -55,6 +55,10 @@ fn main() {
         writeln!(io, "proportional steering: {}", steer)?;
         Ok(())
     });
+    shell.new_command_noargs("enable", "enables the driver", |io, driver| {
+        driver.as_mut().unwrap().enable();
+        Ok(())
+    });
 
     shell.run_loop(&mut ShellIO::default());
 }
