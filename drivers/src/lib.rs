@@ -48,4 +48,10 @@ impl From<rppal::gpio::Error> for DriverError {
         DriverError::Gpio(e)
     }
 }
+impl std::fmt::Display for DriverError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", &self)
+    }
+}
+impl std::error::Error for DriverError {}
 type Result<T> = result::Result<T, DriverError>;

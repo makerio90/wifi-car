@@ -26,24 +26,20 @@ fn main() {
     });
     shell.new_command_noargs("demo", "run a demo sequence", |_, driver| {
         let d = &mut driver.as_mut().unwrap();
-        d.drive(1.0, 0.0);
+        d.drive(1.0, 0.0)?;
         sleep(Duration::from_secs(1));
-        d.drive(-1.0, 0.0);
+        d.drive(-1.0, 0.0)?;
         sleep(Duration::from_secs(1));
-        d.drive(1.0, 1.0);
+        d.drive(1.0, 1.0)?;
         sleep(Duration::from_secs(1));
-        d.drive(1.0, -1.0);
+        d.drive(1.0, -1.0)?;
         Ok(())
     });
-    shell.new_command("drive", "set the Driver", 2, |io, driver, args| {
-        match driver
+    shell.new_command("drive", "set the Driver", 2, |_, driver, args| {
+        driver
             .as_mut()
             .unwrap()
-            .drive(args[0].parse().unwrap(), args[1].parse().unwrap())
-        {
-            Err(e) => writeln!(io, "error: {:?}", e)?,
-            Ok(_) => writeln!(io, "Ok")?,
-        };
+            .drive(args[0].parse().unwrap(), args[1].parse().unwrap())?;
         Ok(())
     });
     shell.new_command_noargs("info", "displays driver info", |io, driver| {
@@ -55,11 +51,8 @@ fn main() {
         writeln!(io, "proportional steering: {}", steer)?;
         Ok(())
     });
-    shell.new_command_noargs("enable", "enables the driver", |io, driver| {
-        match driver.as_mut().unwrap().enable() {
-            Err(e) => writeln!(io, "error: {:?}", e)?,
-            Ok(_) => writeln!(io, "Ok")?,
-        };
+    shell.new_command_noargs("enable", "enables the driver", |_, driver| {
+        driver.as_mut().unwrap().enable()?;
         Ok(())
     });
 
