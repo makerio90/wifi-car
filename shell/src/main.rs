@@ -41,9 +41,18 @@ fn main() {
             .unwrap()
             .drive(args[0].parse().unwrap(), args[1].parse().unwrap())
         {
-            Err(e) => writeln!(io, "error: {:?}", e),
-            Ok(_) => writeln!(io, "Ok"),
+            Err(e) => writeln!(io, "error: {:?}", e)?,
+            Ok(_) => writeln!(io, "Ok")?,
         };
+        Ok(())
+    });
+    shell.new_command_noargs("info", "displays driver info", |io, driver| {
+        let d = &mut driver.as_mut().unwrap();
+        writeln!(io, "enabled: {}", d.is_ready())?;
+        writeln!(io, "has break: {}", d.has_break())?;
+        let (steer, drive) = d.is_proportional();
+        writeln!(io, "proportional drive: {}", drive)?;
+        writeln!(io, "proportional steering: {}", steer)?;
         Ok(())
     });
 
