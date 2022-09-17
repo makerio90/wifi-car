@@ -24,7 +24,7 @@ impl Driver for Demo {
         self.enabled
     }
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(-1.0..1.1).contains(&accelerate) || !(-1.0..1.1).contains(&steer) {
+        if !(-1.0..=1.0).contains(&accelerate) || !(-1.0..=1.0).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
         if !self.enabled {
@@ -44,7 +44,7 @@ impl Driver for Demo {
             "right"
         };
         println!(
-            "got command to drive {} at speed {}% and steer {} {}",
+            "got command to drive {} at speed {}% and steer {} {}%",
             drive_dir, drive_speed, steer_dir, steer_amount
         );
         Ok(())
