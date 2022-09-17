@@ -107,7 +107,7 @@ impl Driver for SkidSteer {
         Ok(())
     }
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(1.0..=1.0).contains(&accelerate) || !(-1.0..=1.0).contains(&steer) {
+        if !(-1.0..=1.0).contains(&accelerate) || !(-1.0..=1.0).contains(&steer) {
             return Err(DriverError::OutOfRange);
         }
         if !self.is_enabled {
