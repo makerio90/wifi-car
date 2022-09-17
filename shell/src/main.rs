@@ -56,7 +56,10 @@ fn main() {
         Ok(())
     });
     shell.new_command_noargs("enable", "enables the driver", |io, driver| {
-        driver.as_mut().unwrap().enable();
+        match driver.as_mut().unwrap().enable() {
+            Err(e) => writeln!(io, "error: {:?}", e)?,
+            Ok(_) => writeln!(io, "Ok")?,
+        };
         Ok(())
     });
 

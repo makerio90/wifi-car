@@ -116,7 +116,7 @@ impl Driver for SkidSteer {
 
         let left = (accelerate - steer).clamp(-1.0, 1.0);
         let right = (accelerate + steer).clamp(-1.0, 1.0);
-        println!("{:#?}", self);
+
         self.rva
             .as_mut()
             .ok_or(DriverError::ExpectedSomeFoundNone)?
@@ -132,7 +132,7 @@ impl Driver for SkidSteer {
         self.enb
             .as_mut()
             .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .set_pwm_frequency(100.0, left.abs())?;
+            .set_pwm_frequency(100.0, right.abs())?;
 
         Ok(())
     }
