@@ -32,7 +32,7 @@ fn main() {
         }
         Ok(())
     });
-    shell.new_command_noargs("demo", "run a demo sequence", |io, driver| {
+    shell.new_command_noargs("demo", "run a demo sequence", |_, driver| {
         let d = &mut driver.as_mut().unwrap();
         d.drive(1.0, 0.0);
         sleep(Duration::from_secs(1));
@@ -44,10 +44,14 @@ fn main() {
         Ok(())
     });
     shell.new_command("drive", "set the Driver", 2, |io, driver, args| {
-        driver
+        match driver
             .as_mut()
             .unwrap()
-            .drive(args[0].parse().unwrap(), args[1].parse().unwrap());
+            .drive(args[0].parse().unwrap(), args[1].parse().unwrap())
+        {
+            Err(e) => writeln!(io, "error: {:?}", e),
+            Ok(_) => writeln!(io, "Ok"),
+        };
         Ok(())
     });
 
