@@ -1,4 +1,5 @@
 use crate::{Driver, DriverError, Result};
+use colored::Colorize;
 
 /// demo driver for testing
 pub struct Demo {
@@ -17,7 +18,7 @@ impl Default for Demo {
 impl Driver for Demo {
     fn enable(&mut self) -> Result<()> {
         self.enabled = true;
-        println!("dummy driver enabled!");
+        println!("{} enabled!", "dummy:".bold().blue());
         Ok(())
     }
     fn is_ready(&self) -> bool {
@@ -44,13 +45,17 @@ impl Driver for Demo {
             "right"
         };
         println!(
-            "got command to drive {} at speed {}% and steer {} {}%",
-            drive_dir, drive_speed, steer_dir, steer_amount
+            "{} got command to drive {} at speed {}% and steer {} {}%",
+            "dummy:".bold().blue(),
+            drive_dir,
+            drive_speed,
+            steer_dir,
+            steer_amount,
         );
         Ok(())
     }
     fn estop(&mut self) -> Result<()> {
-        println!("estop pulled");
+        println!("{} estop pulled", "dummy:".bold().blue());
         Ok(())
     }
     fn has_break(&self) -> bool {
@@ -61,7 +66,7 @@ impl Driver for Demo {
     }
     fn disable(&mut self) -> Result<()> {
         self.enabled = false;
-        println!("disabled");
+        println!("{} disabled;", "dummy:".bold().blue());
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+use colored::Colorize;
 use drivers::drivers::demo::Demo;
 use drivers::drivers::simple_skid_steer::SkidSteer;
 use drivers::drivers::Drivers;
@@ -44,15 +45,47 @@ fn main() {
     });
     shell.new_command_noargs("info", "displays driver info", |io, driver| {
         let d = &mut driver.as_mut().unwrap();
-        writeln!(io, "enabled: {}", d.is_ready())?;
-        writeln!(io, "has break: {}", d.has_break())?;
+        writeln!(
+            io,
+            "enabled: {}",
+            if d.is_ready() {
+                "yes".green()
+            } else {
+                "no".red()
+            }
+        )?;
+        writeln!(
+            io,
+            "has break: {}",
+            if d.has_break() {
+                "yes".green()
+            } else {
+                "no".red()
+            }
+        )?;
         let (steer, drive) = d.is_proportional();
-        writeln!(io, "proportional drive: {}", drive)?;
-        writeln!(io, "proportional steering: {}", steer)?;
+        writeln!(
+            io,
+            "proportional drive: {}",
+            if drive { "yes".green() } else { "no".red() }
+        )?;
+        writeln!(
+            io,
+            "proportional steering: {}",
+            if steer { "yes".green() } else { "no".red() }
+        )?;
         Ok(())
     });
     shell.new_command_noargs("enable", "enables the driver", |_, driver| {
         driver.as_mut().unwrap().enable()?;
+        Ok(())
+    });
+    shell.new_command_noargs("disable", "disables the driver", |_, driver| {
+        driver.as_mut().unwrap().disable()?;
+        Ok(())
+    });
+    shell.new_command_noargs("estop", "estop the driver", |_, driver| {
+        driver.as_mut().unwrap().estop()?;
         Ok(())
     });
 
