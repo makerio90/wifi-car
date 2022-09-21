@@ -541,7 +541,7 @@ dependencies = [
 
 [[package]]
 name = "drivers"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "colored",
  "rppal",
@@ -1183,7 +1183,7 @@ dependencies = [
 
 [[package]]
 name = "shell"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "colored",
  "drivers",
