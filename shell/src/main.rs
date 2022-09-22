@@ -10,7 +10,7 @@ use std::{thread::sleep, time::Duration};
 
 fn main() {
     println!(
-        "Shell baised driver interface v{}",
+        "Shell based driver interface v{}",
         env!("CARGO_PKG_VERSION")
     );
     let driver: Option<Drivers> = None;
