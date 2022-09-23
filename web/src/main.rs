@@ -24,7 +24,7 @@ fn main() {
     env_logger::init();
     let args = Args::parse();
     info!(target: "init",
-        "Shell based driver interface v{}",
+        "web based driver interface v{}",
         env!("CARGO_PKG_VERSION")
     );
 
@@ -40,7 +40,7 @@ fn main() {
         }
     };
     info!(target : "config", "loaded config");
-    let mut driver: Option<Drivers> = None;
+    let mut driver: Option<Drivers>;
 
     // from string to data
     match settings.driver.as_str() {
