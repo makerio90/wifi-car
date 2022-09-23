@@ -15,6 +15,7 @@ impl Settings {
             .add_source(File::with_name(&path))
             .build()?;
         info!(
+            target : "config",
             "using driver: {:?}",
             s.get::<String>("driver").unwrap_or("None".to_string())
         );
