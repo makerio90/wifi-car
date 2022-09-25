@@ -1713,6 +1713,7 @@ dependencies = [
  "config",
  "drivers",
  "env_logger",
+ "lazy_static",
  "log",
  "serde",
  "serde_derive",

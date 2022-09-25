@@ -1,12 +1,13 @@
 use config::Config;
 use config::ConfigError;
 use config::File;
-use log::info;
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub driver: String,
+    pub ip: String,
+    pub port: u16,
 }
 
 impl Settings {
@@ -14,11 +15,6 @@ impl Settings {
         let s = Config::builder()
             .add_source(File::with_name(&path))
             .build()?;
-        info!(
-            target : "config",
-            "using driver: {:?}",
-            s.get::<String>("driver").unwrap_or("None".to_string())
-        );
         s.try_deserialize()
     }
 }

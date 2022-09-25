@@ -1,10 +1,11 @@
 pub mod settings;
 
+use actix_web::{get, web, App, HttpServer, Responder};
 use clap::Parser;
-use colored::Colorize;
 use drivers::drivers::{demo::Demo, simple_skid_steer::SkidSteer, Drivers};
 use drivers::Driver;
-use log::{debug, error, info, log_enabled, Level};
+use lazy_static::lazy_static;
+use log::{error, info};
 use settings::Settings;
 /// web interface for drivers
 #[derive(Parser, Debug)]
@@ -20,66 +21,53 @@ struct Args {
     config_path: String,
 }
 
-fn main() {
+lazy_static! {
+    static ref ARGS: Args = Args::parse();
+    static ref SETTINGS: settings::Settings = match Settings::new(ARGS.config_path.clone()) {
+        Ok(s) => s,
+        Err(e) => {
+            error!(target: "config","error loading config: {}", e);
+            panic!()
+        }
+    };
+    static ref DRIVER: Drivers = match SETTINGS.driver.as_str() {
+        "demo" => Drivers::Demo(Demo::new()),
+        // TODO: make this configurable
+        "skidSteer" => Drivers::SimpleSkidSteer(SkidSteer::new(0, 6, 5, 12)),
+        d => {
+            error!(target:"driver","`{}` is not a driver! quitting...", d);
+            panic!()
+        }
+    };
+}
+
+#[get("/api/info")]
+async fn driver_info() -> impl Responder {
+    format!(
+        "using driver {}! \n break: {}",
+        SETTINGS.driver,
+        DRIVER.has_break()
+    )
+}
+#[actix_web::main] // or #[tokio::main]
+async fn main() {
     env_logger::init();
-    let args = Args::parse();
     info!(target: "init",
         "web based driver interface v{}",
         env!("CARGO_PKG_VERSION")
     );
 
-    info!(
-        target : "config",
-        "loading config file in: {}", args.config_path
-    );
-    let settings = match Settings::new(args.config_path) {
+    info!(target: "server", "starting server at http://{}:{}/", &SETTINGS.ip, SETTINGS.port);
+    // start the server
+    match HttpServer::new(|| App::new().service(driver_info))
+        .bind((SETTINGS.ip.clone(), SETTINGS.port))
+    {
         Ok(s) => s,
         Err(e) => {
-            error!(target: "config","error loading config: {}", e);
-            std::process::exit(1)
-        }
-    };
-    info!(target : "config", "loaded config");
-    let mut driver: Option<Drivers>;
-
-    // from string to data
-    match settings.driver.as_str() {
-        "demo" => driver = Some(Drivers::Demo(Demo::new())),
-        // TODO: make this configurable
-        "skidSteer" => driver = Some(Drivers::SimpleSkidSteer(SkidSteer::new(0, 6, 5, 12))),
-        d => {
-            error!("`{}` is not a driver! quitting...", d);
-            std::process::exit(1)
+            error!(target: "server","error starting server: {}", e);
+            panic!()
         }
     }
-
-    if log_enabled!(Level::Debug) {
-        // test
-        let d = &mut driver.as_mut().unwrap();
-        debug!(
-            "enabled: {}",
-            if d.is_ready() {
-                "yes".green()
-            } else {
-                "no".red()
-            }
-        );
-        debug!(
-            "has break: {}",
-            if d.has_break() {
-                "yes".green()
-            } else {
-                "no".red()
-            }
-        );
-        let (steer, drive) = d.is_proportional();
-        debug!(
-            "proportional drive: {}",
-            if drive { "yes".green() } else { "no".red() }
-        );
-        debug!(
-            "proportional steering: {}",
-            if steer { "yes".green() } else { "no".red() }
-        );
-    }
+    .run()
+    .await;
 }
