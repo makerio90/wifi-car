@@ -1,12 +1,15 @@
+pub mod server;
 pub mod settings;
 
-use actix_web::{get, web, App, HttpServer, Responder};
 use clap::Parser;
 use drivers::drivers::{demo::Demo, simple_skid_steer::SkidSteer, Drivers};
 use drivers::Driver;
 use lazy_static::lazy_static;
-use log::{error, info};
+use log::{error, info, trace};
+use server::end;
 use settings::Settings;
+use std::sync::Mutex;
+use warp::Filter;
 /// web interface for drivers
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -30,7 +33,7 @@ lazy_static! {
             panic!()
         }
     };
-    static ref DRIVER: Drivers = match SETTINGS.driver.as_str() {
+    static ref DRIVER: Mutex<Drivers> = Mutex::new(match SETTINGS.driver.as_str() {
         "demo" => Drivers::Demo(Demo::new()),
         // TODO: make this configurable
         "skidSteer" => Drivers::SimpleSkidSteer(SkidSteer::new(0, 6, 5, 12)),
@@ -38,18 +41,10 @@ lazy_static! {
             error!(target:"driver","`{}` is not a driver! quitting...", d);
             panic!()
         }
-    };
+    });
 }
 
-#[get("/api/info")]
-async fn driver_info() -> impl Responder {
-    format!(
-        "using driver {}! \n break: {}",
-        SETTINGS.driver,
-        DRIVER.has_break()
-    )
-}
-#[actix_web::main] // or #[tokio::main]
+#[tokio::main] // or #[tokio::main]
 async fn main() {
     env_logger::init();
     info!(target: "init",
@@ -57,17 +52,5 @@ async fn main() {
         env!("CARGO_PKG_VERSION")
     );
 
-    info!(target: "server", "starting server at http://{}:{}/", &SETTINGS.ip, SETTINGS.port);
-    // start the server
-    match HttpServer::new(|| App::new().service(driver_info))
-        .bind((SETTINGS.ip.clone(), SETTINGS.port))
-    {
-        Ok(s) => s,
-        Err(e) => {
-            error!(target: "server","error starting server: {}", e);
-            panic!()
-        }
-    }
-    .run()
-    .await;
+    warp::serve(end()).run(([127, 0, 0, 1], 3030)).await;
 }
