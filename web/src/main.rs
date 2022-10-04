@@ -22,17 +22,6 @@ struct Args {
     config_path: String,
 }
 
-lazy_static! {
-    static ref ARGS: Args = Args::parse();
-    static ref SETTINGS: settings::Settings = match Settings::new(ARGS.config_path.clone()) {
-        Ok(s) => s,
-        Err(e) => {
-            error!(target: "config","error loading config: {}", e);
-            panic!()
-        }
-    };
-}
-
 #[tokio::main] // or #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -40,16 +29,18 @@ async fn main() {
         "web based driver interface v{}",
         env!("CARGO_PKG_VERSION")
     );
+    let args: Args = Args::parse();
 
-    let driver = Arc::new(Mutex::new(match SETTINGS.driver.as_str() {
-        "demo" => Drivers::Demo(Demo::new()),
-        // TODO: make this configurable
-        "skidSteer" => Drivers::SimpleSkidSteer(SkidSteer::new(0, 6, 5, 12)),
-        d => {
-            error!(target:"driver","`{}` is not a driver! quitting...", d);
+    let settings: settings::Settings = match Settings::new(args.config_path.clone()) {
+        Ok(s) => s,
+        Err(e) => {
+            error!(target: "config","error loading config: {}", e);
             panic!()
         }
-    }));
+    };
+
+    let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
+
     let api = api::api(driver);
 
     // View access logs by setting `RUST_LOG=todos`.

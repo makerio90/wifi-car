@@ -1,5 +1,6 @@
 use crate::{Driver, DriverError, Result};
 use rppal::gpio::{Gpio, OutputPin};
+use serde_derive::Deserialize;
 // simple skid steer car using L298P drivers
 #[derive(Debug)]
 pub struct SkidSteer {
@@ -28,14 +29,20 @@ pub struct SkidSteer {
     /// gpio object
     gpio: Option<Gpio>,
 }
-
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    ena_pin: u8,
+    enb_pin: u8,
+    rva_pin: u8,
+    rvb_pin: u8,
+}
 impl SkidSteer {
-    pub fn new(ena_pin: u8, enb_pin: u8, rva_pin: u8, rvb_pin: u8) -> Self {
+    pub fn new(config: Config) -> Self {
         Self {
-            ena_pin,
-            enb_pin,
-            rva_pin,
-            rvb_pin,
+            ena_pin: config.ena_pin,
+            enb_pin: config.enb_pin,
+            rva_pin: config.rva_pin,
+            rvb_pin: config.rvb_pin,
             is_enabled: false,
             ena: None,
             enb: None,

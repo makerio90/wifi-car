@@ -294,6 +294,7 @@ dependencies = [
  "colored",
  "rppal",
  "serde",
+ "serde_derive",
 ]
 
 [[package]]

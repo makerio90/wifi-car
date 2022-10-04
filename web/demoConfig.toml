@@ -1,3 +1,5 @@
-driver="demo"
 ip="127.0.0.1"
 port="8080"
+
+[driver.Demo]
+printme="line printed from toml"

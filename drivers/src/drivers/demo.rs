@@ -1,18 +1,27 @@
 use crate::{Driver, DriverError, Result};
 use colored::Colorize;
-
+use serde_derive::Deserialize;
 /// demo driver for testing
 pub struct Demo {
     enabled: bool,
 }
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    printme: String,
+}
+
 impl Demo {
-    pub fn new() -> Self {
+    pub fn new(config: Config) -> Self {
+        println!("{}", config.printme);
         Demo { enabled: false }
     }
 }
+
 impl Default for Demo {
     fn default() -> Self {
-        Self::new()
+        Self::new(Config {
+            printme: "new from default trait".to_string(),
+        })
     }
 }
 impl Driver for Demo {
