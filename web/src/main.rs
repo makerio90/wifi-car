@@ -45,5 +45,5 @@ async fn main() {
 
     // View access logs by setting `RUST_LOG=todos`.
     let routes = api.with(warp::log("api"));
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(routes).run((settings.ip, settings.port)).await;
 }

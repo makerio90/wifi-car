@@ -6,7 +6,7 @@ use serde_derive::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub driver: DriverConfig,
-    pub ip: String,
+    pub ip: [u8; 4],
     pub port: u16,
 }
 
