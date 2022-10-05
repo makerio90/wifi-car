@@ -1,4 +1,4 @@
-pub mod api;
+pub mod routes;
 pub mod settings;
 
 use clap::Parser;
@@ -41,9 +41,6 @@ async fn main() {
 
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 
-    let api = api::api(driver);
-
-    // View access logs by setting `RUST_LOG=todos`.
-    let routes = api.with(warp::log("api"));
-    warp::serve(routes).run((settings.ip, settings.port)).await;
+    let api = routes::api(driver).with(warp::log("api"));
+    warp::serve(api).run((settings.ip, settings.port)).await;
 }
