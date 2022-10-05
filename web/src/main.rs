@@ -2,9 +2,8 @@ pub mod routes;
 pub mod settings;
 
 use clap::Parser;
-use drivers::drivers::{demo::Demo, simple_skid_steer::SkidSteer, Drivers};
-use lazy_static::lazy_static;
-use log::{error, info, trace};
+use drivers::drivers::Drivers;
+use log::{error, info, LevelFilter};
 use settings::Settings;
 use std::sync::{Arc, Mutex};
 use warp::Filter;
@@ -13,25 +12,23 @@ use warp::Filter;
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// path to the config file
-    #[clap(
-        short,
-        long,
-        value_parser,
-        default_value = "$HOME/.config/wificar.toml"
-    )]
-    config_path: String,
+    #[clap(short, long, value_parser)]
+    config_path: Option<String>,
 }
 
 #[tokio::main] // or #[tokio::main]
 async fn main() {
-    env_logger::init();
+    env_logger::builder().filter_level(LevelFilter::Info).init();
     info!(target: "init",
         "web based driver interface v{}",
         env!("CARGO_PKG_VERSION")
     );
     let args: Args = Args::parse();
-
-    let settings: settings::Settings = match Settings::new(args.config_path.clone()) {
+    let config_path: String = args
+        .config_path
+        .clone()
+        .unwrap_or(format!("{}/.config/wificar.toml", env!("HOME")));
+    let settings: settings::Settings = match Settings::new(config_path) {
         Ok(s) => s,
         Err(e) => {
             error!(target: "config","error loading config: {}", e);
