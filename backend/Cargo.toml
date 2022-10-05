@@ -1,5 +1,5 @@
 [package]
-name = "web"
+name = "backend"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,9 +11,12 @@ colored = "2.0.0"
 config = "0.13.2"
 drivers = {path = '../drivers/'}
 env_logger = "0.9.1"
+futures-util = "0.3.24"
 lazy_static = "1.4.0"
 log = "0.4.17"
 serde = "1.0.145"
 serde_derive = "1.0.145"
+serde_json = "1.0.85"
 tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1.10"
 warp = "0.3"

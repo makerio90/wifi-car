@@ -2,5 +2,5 @@
 members = [
           'drivers',
           'shell',
-          'web'
+          'backend'
 ]

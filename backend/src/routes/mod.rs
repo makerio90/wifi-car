@@ -1,4 +1,5 @@
 mod api;
+mod websocket;
 
 use drivers::drivers::Drivers;
 use serde::Deserialize;
@@ -12,6 +13,7 @@ pub fn api(
         .or(disable(driver.clone()))
         .or(enable(driver.clone()))
         .or(drive(driver.clone()))
+        .or(drive_ws(driver.clone()))
 }
 
 pub fn enable(
@@ -32,7 +34,7 @@ pub fn disable(
         .and_then(api::disable)
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct DriveQuery {
     accelerate: f64,
     steer: f64,
@@ -46,6 +48,17 @@ pub fn drive(
         .and(warp::post())
         .and(with_driver(driver))
         .and_then(api::drive)
+}
+
+pub fn drive_ws(
+    driver: Arc<Mutex<Drivers>>,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("ws")
+        .and(warp::ws())
+        .and(with_driver(driver))
+        .map(|ws: warp::ws::Ws, driver| {
+            ws.on_upgrade(move |socket| websocket::drive(socket, driver))
+        })
 }
 
 pub fn info(
