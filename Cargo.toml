@@ -1,6 +1,6 @@
 [workspace]
 members = [
           'drivers',
-          'shell',
+          'frontend',
           'backend'
 ]
