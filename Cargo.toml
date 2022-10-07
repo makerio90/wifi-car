@@ -1,6 +1,5 @@
 [workspace]
 members = [
           'drivers',
-          'frontend',
           'backend'
 ]
