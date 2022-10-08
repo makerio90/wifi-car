@@ -34,3 +34,14 @@ function drive(accelerate,steer) {
     method: "post"
   })
 }
+window.addEventListener("gamepadconnected", () => {
+  console.log('contoller detected. starting websocked on ', window.location + '/ws')
+  let fasthandle = new WebSocket('ws://127.0.0.1:8080/ws')
+  setInterval(() => {
+    const [gp] = navigator.getGamepads();
+    if(gp != undefined) {
+      fasthandle.send(JSON.stringify({accelerate: gp.axes[1] * -1, steer: gp.axes[0]}))
+    } else {
+      fasthandle.close()
+    }
+}, 100)});
