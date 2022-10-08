@@ -39,7 +39,7 @@ async fn main() {
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 
     let api = routes::api(driver)
-        .or(warp::fs::dir("frontend/dist"))
+        .or(warp::fs::dir("frontend/"))
         .with(warp::log("api"));
 
     warp::serve(api).run((settings.ip, settings.port)).await;
