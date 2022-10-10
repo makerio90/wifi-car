@@ -2,18 +2,21 @@ mod api;
 mod websocket;
 
 use drivers::drivers::Drivers;
+use log::info;
+use rand::distributions::{Alphanumeric, DistString};
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
-use warp::Filter;
-
+use warp::{Filter, Rejection};
+type Sessions = Arc<Mutex<Vec<String>>>;
 pub fn api(
     driver: Arc<Mutex<Drivers>>,
+    //apiKey: &str,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     info(driver.clone())
         .or(disable(driver.clone()))
         .or(enable(driver.clone()))
         .or(drive(driver.clone()))
-        .or(drive_ws(driver.clone()))
+        .or(drive_ws(driver))
 }
 
 pub fn enable(
@@ -69,7 +72,22 @@ pub fn info(
         .and(with_driver(driver))
         .and_then(api::info)
 }
+#[derive(Debug)]
+struct Unauthorised;
 
+impl warp::reject::Reject for Unauthorised {}
+
+fn needs_auth(sessions: Sessions) -> impl Filter<Extract = ((),), Error = Rejection> + Clone {
+    warp::cookie("session")
+        .and(warp::any().map(move || sessions.clone()))
+        .and_then(|session_id: String, sessions: Sessions| async move {
+            if (*sessions.lock().unwrap()).contains(&session_id) {
+                Ok(())
+            } else {
+                Err(warp::reject::custom(Unauthorised))
+            }
+        })
+}
 fn with_driver(
     driver: Arc<Mutex<Drivers>>,
 ) -> impl Filter<Extract = (Arc<Mutex<Drivers>>,), Error = std::convert::Infallible> + Clone {

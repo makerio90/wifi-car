@@ -2,7 +2,6 @@ use super::DriveQuery;
 use drivers::drivers::Drivers;
 use drivers::Driver;
 use futures_util::{FutureExt, StreamExt};
-use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
