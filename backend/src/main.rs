@@ -47,7 +47,7 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/");
 
-    let api = routes::api(driver);
+    let api = routes::api(driver, settings.password.get_hash().unwrap());
 
     warp::serve(api.or(www).with(warp::log("serv")))
         .run((settings.ip, settings.port))

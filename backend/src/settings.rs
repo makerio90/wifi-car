@@ -2,7 +2,7 @@ use config::Config;
 use config::ConfigError;
 use config::File;
 use drivers::drivers::DriverConfig;
-use log::{log_enabled, warn, Level};
+use log::{debug, warn};
 use serde_derive::Deserialize;
 use sha2::{Digest, Sha256};
 
@@ -13,7 +13,15 @@ pub enum Pass {
     /// raw unhashed password. (not reccomended)
     Raw(String),
 }
-
+impl Pass {
+    pub fn get_hash(&self) -> Option<String> {
+        if let Pass::Hash(s) = self {
+            Some(s.to_string())
+        } else {
+            None
+        }
+    }
+}
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub driver: DriverConfig,
@@ -31,9 +39,11 @@ impl Settings {
         if let Pass::Raw(_) = conf.password {
             warn!("avoid using raw passwords in conf file. instead use a sha256 hash")
         }
-        if let Pass::Raw(mut raw) = conf.password {
+        if let Pass::Raw(raw) = conf.password {
             conf.password = Pass::Hash(format!("{:X}", Sha256::digest(raw)))
         }
+
+        debug!("hash: {:?}", &conf.password.get_hash().unwrap());
         Ok(conf)
     }
 }
