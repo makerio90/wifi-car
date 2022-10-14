@@ -10,7 +10,6 @@ license = 'gpl 3.0'
 description = """
 interface for controlling a car/rover over wifi
 """
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 colored = "2.0.0"

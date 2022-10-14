@@ -1,4 +1,6 @@
 use std::result;
+
+use serde::Serialize;
 pub mod drivers;
 pub trait Driver {
     /// enable the car. do whatever neccicary to get the driver ready to drive
@@ -28,7 +30,7 @@ pub trait Driver {
     fn disable(&mut self) -> Result<()>;
 }
 /// any error that can return of attempting to use the above funtions
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum DriverError {
     /// you tried to run a function but the driver was not enabled.
     /// dont `panic!` just enable the driver.

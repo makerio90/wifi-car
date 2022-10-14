@@ -30,6 +30,7 @@ pub fn login(
         .and(warp::post())
         .and(warp::header::exact_ignore_case(
             "PASSWORD",
+            //TODO: fix mem leak
             Box::<str>::leak(pass.into_boxed_str()),
         ))
         .and(warp::any().map(move || sessions.clone()))
