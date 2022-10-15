@@ -30,7 +30,8 @@ pub trait Driver {
     fn disable(&mut self) -> Result<()>;
 }
 /// any error that can return of attempting to use the above funtions
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
+//#[serde(tag = "error")]
 pub enum DriverError {
     /// you tried to run a function but the driver was not enabled.
     /// dont `panic!` just enable the driver.
@@ -44,7 +45,6 @@ pub enum DriverError {
     /// gpio error
     Gpio(rppal::gpio::Error),
 }
-/// TODO: better way to impl this?
 impl From<rppal::gpio::Error> for DriverError {
     fn from(e: rppal::gpio::Error) -> DriverError {
         DriverError::Gpio(e)
