@@ -29,7 +29,7 @@ pub fn login(
     warp::path!("auth" / "login")
         .and(warp::post())
         .and(warp::header::exact_ignore_case(
-            "PASSWORD",
+            "Authorization",
             //TODO: fix mem leak
             Box::<str>::leak(pass.into_boxed_str()),
         ))

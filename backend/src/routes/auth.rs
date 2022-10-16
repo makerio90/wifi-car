@@ -1,14 +1,15 @@
 use super::Sessions;
 use hyper::body::Body;
-use log::debug;
+use log::{debug, info};
 use std::convert::Infallible;
 use warp::http::{Response, StatusCode};
 
 pub async fn login(sessions: Sessions, id: String) -> Result<impl warp::Reply, Infallible> {
     sessions.lock().unwrap().push(id.clone());
     debug!("new client connetced with session id {}", id.clone());
+    info!(target: "auth", "new client connected!");
     Ok(Response::builder()
-        .header("set-cookie", format!("session={}", id))
+        .header("set-cookie", format!("session={}; path=/", id))
         .status(StatusCode::NO_CONTENT)
         .body(Body::empty()))
 }
