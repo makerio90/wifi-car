@@ -31,7 +31,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new(path: String) -> Result<Self, ConfigError> {
+    pub fn new(path: &str) -> Result<Self, ConfigError> {
         let s = Config::builder()
             .add_source(File::with_name(&path))
             .build()?;

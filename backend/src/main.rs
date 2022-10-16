@@ -35,7 +35,7 @@ async fn main() {
         .config_path
         .clone()
         .unwrap_or(format!("{}/.config/wificar.toml", env!("HOME")));
-    let settings: settings::Settings = match Settings::new(config_path) {
+    let settings: settings::Settings = match Settings::new(&config_path) {
         Ok(s) => s,
         Err(e) => {
             error!(target: "config","error loading config: {}", e);
@@ -47,7 +47,7 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/");
 
-    let api = routes::api(driver, settings.password.get_hash().unwrap());
+    let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 
     warp::serve(api.or(www).with(warp::log("serv")))
         .run((settings.ip, settings.port))

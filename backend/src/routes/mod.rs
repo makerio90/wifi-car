@@ -11,6 +11,7 @@ type Sessions = Arc<Mutex<Vec<String>>>;
 
 pub fn api(
     driver: Arc<Mutex<Drivers>>,
+    config_path: String,
     pass: String,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let sessions: Sessions = Arc::new(Mutex::new(Vec::new()));
@@ -19,7 +20,8 @@ pub fn api(
         .or(enable(driver.clone(), sessions.clone()))
         .or(drive(driver.clone(), sessions.clone()))
         .or(drive_ws(driver, sessions.clone()))
-        .or(login(sessions, pass))
+        .or(login(sessions.clone(), pass))
+        .or(read_config(sessions, config_path))
 }
 
 pub fn login(
@@ -47,6 +49,16 @@ pub fn login(
         .and(warp::any().map(move || -> String { warp::cookie::<String>("session").Extract }))
         .and_then(auth::logout)
 }*/
+
+pub fn read_config(
+    sessions: Sessions,
+    config_path: String,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("api" / "config")
+        .and(warp::get())
+        .and(needs_auth(sessions))
+        .and(warp::fs::file(config_path))
+}
 
 pub fn enable(
     driver: Arc<Mutex<Drivers>>,

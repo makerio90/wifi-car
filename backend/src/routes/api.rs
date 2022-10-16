@@ -1,5 +1,6 @@
 use drivers::drivers::Drivers;
 use drivers::{Driver, DriverError};
+use hyper::http::response;
 use hyper::Body;
 use log::{debug, error};
 use std::convert::Infallible;
@@ -45,6 +46,7 @@ pub async fn info(driver: Arc<Mutex<Drivers>>) -> Result<impl warp::Reply, Infal
     debug!(target: "api", "got driver lock");
     Ok(warp::reply::json(&(*driver).is_ready()))
 }
+
 /*
  * FIXME
 fn to_warp_error(e: Result<T, DriverError>) -> Result<impl warp::Reply, Infallible> {

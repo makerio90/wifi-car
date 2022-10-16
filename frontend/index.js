@@ -33,6 +33,23 @@ window.onload = function () {
     event.preventDefault();
     login(form.elements["pass"].value);
   });
+
+  const myModal = document.getElementById("config");
+  const myInput = document.getElementById("show_config");
+
+  myModal.addEventListener("shown.bs.modal", () => {
+    myInput.focus();
+  });
+
+  const config = document.getElementById("config_text_areia");
+  fetch("/api/config")
+    .then((data) => data.text())
+    .then((text) => {
+      config.value = text;
+    })
+    .catch((e) => {
+      console.err(e);
+    });
 };
 
 function login(pass) {
