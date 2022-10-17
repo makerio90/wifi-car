@@ -45,7 +45,7 @@ async fn main() {
 
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 
-    let www = warp::fs::dir("frontend/");
+    let www = warp::fs::dir("frontend/dist/");
 
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 

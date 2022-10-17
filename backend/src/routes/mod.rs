@@ -31,7 +31,8 @@ pub fn login(
     warp::path!("auth" / "login")
         .and(warp::post())
         .and(warp::header::exact_ignore_case(
-            "Authorization",
+            // frontend gloo-net sets all headers to lowercase; but this should be camel case
+            "authorization",
             //TODO: fix mem leak
             Box::<str>::leak(pass.into_boxed_str()),
         ))
