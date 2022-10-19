@@ -10,6 +10,15 @@ pub enum Msg {
     Enable,
     Disable,
     Login(String),
+    Drive(Dir),
+}
+
+pub enum Dir {
+    Forward,
+    Backward,
+    Left,
+    Right,
+    Stop,
 }
 
 pub struct App;
@@ -42,6 +51,22 @@ impl Component for App {
                         .await;
                 });
             }
+            Msg::Drive(d) => {
+                let (accelerate, steer) = match d {
+                    Dir::Forward => (1.0, 0.0),
+                    Dir::Backward => (-1.0, 0.0),
+                    Dir::Left => (0.0, -1.0),
+                    Dir::Right => (0.0, 1.0),
+                    _ => (0.0, 0.0),
+                };
+                let parems = [
+                    ("accelerate", accelerate.to_string()),
+                    ("steer", steer.to_string()),
+                ];
+                wasm_bindgen_futures::spawn_local(async move {
+                    Request::post("/api/drive").query(parems).send().await;
+                });
+            }
         };
         true
     }
@@ -57,6 +82,9 @@ impl Component for App {
                 None
             }
         });
+
+        let stop = ctx.link().callback(|_| Msg::Drive(Dir::Stop));
+
         html! {
         <>
             <nav class="navbar bg-light">
@@ -69,31 +97,31 @@ impl Component for App {
             </nav>
             <div class="card mx-auto" style="width: 280px;">
                 <div class="card-header">
-                    <button class="btn btn-success" id="enable" onclick={ctx.link().callback(|_| Msg::Enable)}>{"enable"}</button>
-                    <button class="btn btn-danger" id="disable" onclick={ctx.link().callback(|_| Msg::Disable)}>{"disable"}</button>
+                    <button class="btn btn-success" onclick={ctx.link().callback(|_| Msg::Enable)}>{"enable"}</button>
+                    <button class="btn btn-danger" onclick={ctx.link().callback(|_| Msg::Disable)}>{"disable"}</button>
                 </div>
                 <div class="container text-center mx-auto">
                     <div class="row">
                         <div class="col align-self-center">
-                            <button class="btn btn-outline-secondary" id="fwd">{"fwd"}</button><br />
+                            <button class="btn btn-outline-secondary" onmousedown={ctx.link().callback(|_| Msg::Drive(Dir::Forward))} onmouseup={stop.clone()}>{"fwd"}</button><br />
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col">
-                            <button class="btn btn-outline-secondary" id="left">{"left"}</button>
+                            <button class="btn btn-outline-secondary" onmousedown={ctx.link().callback(|_| Msg::Drive(Dir::Left))} onmouseup={stop.clone()}>{"left"}</button>
                         </div>
                         <div class="col">
-                            <button class="btn btn-outline-secondary" id="bkwd">{"bkwd"}</button>
+                            <button class="btn btn-outline-secondary" onmousedown={ctx.link().callback(|_| Msg::Drive(Dir::Backward))} onmouseup={stop.clone()}>{"bkwd"}</button>
                         </div>
                         <div class="col">
-                            <button class="btn btn-outline-secondary" id="right">{"right"}</button>
+                            <button class="btn btn-outline-secondary" onmousedown={ctx.link().callback(|_| Msg::Drive(Dir::Right))} onmouseup={stop}>{"right"}</button>
                         </div>
                     </div>
                 </div>
             </div>
         </>
-                    }
+        }
     }
 }
 
