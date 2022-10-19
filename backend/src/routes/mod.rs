@@ -21,9 +21,10 @@ pub fn api(
         .or(drive(driver.clone(), sessions.clone()))
         .or(drive_ws(driver, sessions.clone()))
         .or(login(sessions.clone(), pass))
+        // FIXME
+        //.or(write_config(sessions.clone(), config_path.clone()))
         .or(read_config(sessions, config_path))
 }
-
 pub fn login(
     sessions: Sessions,
     pass: String,
@@ -31,9 +32,9 @@ pub fn login(
     warp::path!("auth" / "login")
         .and(warp::post())
         .and(warp::header::exact_ignore_case(
-            // frontend gloo-net sets all headers to lowercase; but this should be camel case
+            // HACK: frontend gloo-net sets all headers to lowercase; but this should be camel case
             "authorization",
-            //TODO: fix mem leak
+            // TODO: fix mem leak
             Box::<str>::leak(pass.into_boxed_str()),
         ))
         .and(warp::any().map(move || sessions.clone()))
@@ -59,6 +60,19 @@ pub fn read_config(
         .and(warp::get())
         .and(needs_auth(sessions))
         .and(warp::fs::file(config_path))
+}
+
+pub fn write_config(
+    sessions: Sessions,
+    config_path: String,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("api" / "config")
+        .and(warp::post())
+        .and(needs_auth(sessions))
+        .map(move || config_path.clone())
+        .and(warp::body::content_length_limit(4096))
+        .and(warp::body::bytes())
+        .and_then(api::set_config)
 }
 
 pub fn enable(

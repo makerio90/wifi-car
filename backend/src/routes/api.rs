@@ -1,11 +1,17 @@
 use drivers::drivers::Drivers;
 use drivers::{Driver, DriverError};
+use hyper::body::Bytes;
 use hyper::http::response;
 use hyper::Body;
 use log::{debug, error};
+use serde::Serialize;
 use std::convert::Infallible;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::os::unix::prelude::FileExt;
 use std::sync::{Arc, Mutex};
 use warp::http::{Response, StatusCode};
+use warp::Buf;
 
 pub async fn enable(driver: Arc<Mutex<Drivers>>) -> Result<impl warp::Reply, Infallible> {
     debug!(target: "api", "waiting for driver lock");
@@ -47,9 +53,21 @@ pub async fn info(driver: Arc<Mutex<Drivers>>) -> Result<impl warp::Reply, Infal
     Ok(warp::reply::json(&(*driver).is_ready()))
 }
 
-/*
- * FIXME
-fn to_warp_error(e: Result<T, DriverError>) -> Result<impl warp::Reply, Infallible> {
+pub async fn set_config(
+    config_path: String,
+    mut body: Bytes,
+) -> Result<impl warp::Reply, Infallible> {
+    //to_warp_error(
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(config_path)
+        .unwrap()
+        .write_all(&*body);
+    Ok(StatusCode::OK)
+}
+
+fn to_warp_error<T>(e: Result<T, impl Serialize>) -> Result<impl warp::Reply, Infallible> {
     match e {
         Ok(_) => Ok(Response::builder().body(Body::empty())),
         Err(e) => Ok(Response::builder()
@@ -61,4 +79,3 @@ fn to_warp_error(e: Result<T, DriverError>) -> Result<impl warp::Reply, Infallib
             )),
     }
 }
-*/
