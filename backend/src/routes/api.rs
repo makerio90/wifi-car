@@ -1,17 +1,14 @@
 use drivers::drivers::Drivers;
-use drivers::{Driver, DriverError};
+use drivers::Driver;
 use hyper::body::Bytes;
-use hyper::http::response;
 use hyper::Body;
-use log::{debug, error};
+use log::{debug, info};
 use serde::Serialize;
 use std::convert::Infallible;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::os::unix::prelude::FileExt;
 use std::sync::{Arc, Mutex};
 use warp::http::{Response, StatusCode};
-use warp::Buf;
 
 pub async fn enable(driver: Arc<Mutex<Drivers>>) -> Result<impl warp::Reply, Infallible> {
     debug!(target: "api", "waiting for driver lock");
@@ -53,18 +50,18 @@ pub async fn info(driver: Arc<Mutex<Drivers>>) -> Result<impl warp::Reply, Infal
     Ok(warp::reply::json(&(*driver).is_ready()))
 }
 
-pub async fn set_config(
-    config_path: String,
-    mut body: Bytes,
-) -> Result<impl warp::Reply, Infallible> {
+pub async fn set_config(config_path: String, body: Bytes) -> Result<impl warp::Reply, Infallible> {
     //to_warp_error(
     OpenOptions::new()
         .read(true)
         .write(true)
+        .truncate(true)
         .open(config_path)
         .unwrap()
         .write_all(&*body);
-    Ok(StatusCode::OK)
+    info!("changes made to config. restart for them to take affect");
+    Ok(Response::builder()
+        .body("changes made. please restart the server for the changes to take affect"))
 }
 
 fn to_warp_error<T>(e: Result<T, impl Serialize>) -> Result<impl warp::Reply, Infallible> {

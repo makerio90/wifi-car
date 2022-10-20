@@ -21,8 +21,7 @@ pub fn api(
         .or(drive(driver.clone(), sessions.clone()))
         .or(drive_ws(driver, sessions.clone()))
         .or(login(sessions.clone(), pass))
-        // FIXME
-        //.or(write_config(sessions.clone(), config_path.clone()))
+        .or(write_config(sessions.clone(), config_path.clone()))
         .or(read_config(sessions, config_path))
 }
 pub fn login(
