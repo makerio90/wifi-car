@@ -1,9 +1,7 @@
 use drivers::drivers::Drivers;
 use drivers::Driver;
 use hyper::body::Bytes;
-use hyper::Body;
 use log::{debug, info};
-use serde::Serialize;
 use std::convert::Infallible;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -63,7 +61,7 @@ pub async fn set_config(config_path: String, body: Bytes) -> Result<impl warp::R
     Ok(Response::builder()
         .body("changes made. please restart the server for the changes to take affect"))
 }
-
+/*
 fn to_warp_error<T>(e: Result<T, impl Serialize>) -> Result<impl warp::Reply, Infallible> {
     match e {
         Ok(_) => Ok(Response::builder().body(Body::empty())),
@@ -76,3 +74,4 @@ fn to_warp_error<T>(e: Result<T, impl Serialize>) -> Result<impl warp::Reply, In
             )),
     }
 }
+*/

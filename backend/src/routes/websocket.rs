@@ -2,14 +2,16 @@ use super::DriveQuery;
 use drivers::drivers::Drivers;
 use drivers::Driver;
 use futures_util::{FutureExt, StreamExt};
+use log::error;
+use serde::de::Error;
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc;
+use tokio::sync::mpsc::{self, UnboundedSender};
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};
 
 pub async fn drive(ws: WebSocket, driver: Arc<Mutex<Drivers>>) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
-    let (client_sender, client_rcv) = mpsc::unbounded_channel();
+    let (_, client_rcv) = mpsc::unbounded_channel();
 
     let client_rcv = UnboundedReceiverStream::new(client_rcv);
 
@@ -22,27 +24,28 @@ pub async fn drive(ws: WebSocket, driver: Arc<Mutex<Drivers>>) {
         let msg = match result {
             Ok(msg) => msg,
             Err(e) => {
-                log::error!("error receiving message: {}", e);
+                error!(target: "ws_drive" , "error: {:?}", e );
                 break;
             }
         };
-        let msg = match msg.to_str() {
-            Ok(v) => v,
-            Err(_) => return,
-        };
-        let cmd: DriveQuery = match serde_json::from_str(&msg) {
-            Ok(v) => v,
-            Err(e) => {
-                log::error!("error parseing message: {}", e);
-                break;
-            }
-        };
-        log::debug!(target: "api", "waiting for driver lock");
-        let mut driver = driver.lock().unwrap();
-        log::debug!(target: "api", "got driver lock");
-        client_sender.send(Ok(Message::text(format!(
-            "{:?}",
-            (*driver).drive(cmd.accelerate, cmd.steer)
-        ))));
+        match handle_msg(msg, driver.clone()) {
+            Ok(_) => continue,
+            Err(e) => error!(target: "ws_drive", "error: {:?}", e),
+        }
     }
+}
+
+fn handle_msg(msg: Message, driver: Arc<Mutex<Drivers>>) -> Result<(), Box<dyn std::error::Error>> {
+    let msg: &str = match msg.to_str() {
+        Ok(s) => Ok(s),
+        Err(()) => Err("error converting to string"),
+    }?;
+    let cmd: DriveQuery = serde_json::from_str(&msg)?;
+
+    log::debug!(target: "api", "waiting for driver lock");
+    let mut driver = driver.lock().unwrap();
+    log::debug!(target: "api", "got driver lock");
+
+    (*driver).drive(cmd.accelerate, cmd.steer)?;
+    Ok(())
 }

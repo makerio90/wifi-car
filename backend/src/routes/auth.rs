@@ -13,7 +13,7 @@ pub async fn login(sessions: Sessions, id: String) -> Result<impl warp::Reply, I
         .status(StatusCode::NO_CONTENT)
         .body(Body::empty()))
 }
-
+/*
 pub async fn logout(sessions: Sessions, id: String) -> Result<impl warp::Reply, Infallible> {
     debug!("client {} disconnetced", id.clone());
     // retain everything that is not id
@@ -22,3 +22,4 @@ pub async fn logout(sessions: Sessions, id: String) -> Result<impl warp::Reply, 
         .status(StatusCode::NO_CONTENT)
         .body(Body::empty()))
 }
+*/

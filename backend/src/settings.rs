@@ -13,6 +13,7 @@ pub enum Pass {
     /// raw unhashed password. (not reccomended)
     Raw(String),
 }
+
 impl Pass {
     pub fn get_hash(&self) -> Option<String> {
         if let Pass::Hash(s) = self {
@@ -22,12 +23,20 @@ impl Pass {
         }
     }
 }
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub driver: DriverConfig,
     pub ip: [u8; 4],
     pub port: u16,
     pub password: Pass,
+    pub web_cam: WebCam,
+}
+#[derive(Debug, Deserialize)]
+pub struct WebCam {
+    pub url: String,
+    pub width: u16,
+    pub height: u16,
 }
 
 impl Settings {

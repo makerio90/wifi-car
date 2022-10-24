@@ -1,7 +1,5 @@
 use gloo_net::http::Request;
-use log::info;
 use log::Level;
-use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use web_sys::HtmlInputElement as InputElement;
 use yew::prelude::*;

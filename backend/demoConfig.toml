@@ -1,5 +1,11 @@
 ip=[127,0,0,1]
 port="8080"
 password.Raw = "test"
+
 [driver.Demo]
 printme="line printed from toml"
+
+[web_cam]
+path="http://my-server.com/"
+width=1920
+height=1080

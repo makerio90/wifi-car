@@ -35,7 +35,7 @@ async fn main() {
         .config_path
         .clone()
         .unwrap_or(format!("{}/.config/wificar.toml", env!("HOME")));
-    let settings: settings::Settings = match Settings::new(&config_path) {
+    let settings: Settings = match Settings::new(&config_path) {
         Ok(s) => s,
         Err(e) => {
             error!(target: "config","error loading config: {}", e);
