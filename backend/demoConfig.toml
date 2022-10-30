@@ -6,6 +6,4 @@ password.Raw = "test"
 printme="line printed from toml"
 
 [web_cam]
-path="http://my-server.com/"
-width=1920
-height=1080
+path="/dev/video0"

@@ -30,15 +30,17 @@ pub struct Settings {
     pub ip: [u8; 4],
     pub port: u16,
     pub password: Pass,
-    pub web_cam: WebCam,
-}
-#[derive(Debug, Deserialize)]
-pub struct WebCam {
-    pub url: String,
-    pub width: u16,
-    pub height: u16,
+    pub web_cam: WebCamSettings,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct WebCamSettings {
+    #[serde(default = "default_cam")]
+    pub path: String,
+}
+fn default_cam() -> String {
+    "/dev/video0".to_string()
+}
 impl Settings {
     pub fn new(path: &str) -> Result<Self, ConfigError> {
         let s = Config::builder()

@@ -1,5 +1,6 @@
 pub mod routes;
 pub mod settings;
+pub mod webcam;
 
 use clap::Parser;
 use drivers::drivers::Drivers;
@@ -35,6 +36,7 @@ async fn main() {
         .config_path
         .clone()
         .unwrap_or(format!("{}/.config/wificar.toml", env!("HOME")));
+
     let settings: Settings = match Settings::new(&config_path) {
         Ok(s) => s,
         Err(e) => {
@@ -47,9 +49,11 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/dist/");
 
+    let webcam = webcam::webcam(settings.web_cam);
+
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 
-    warp::serve(api.or(www).with(warp::log("serv")))
+    warp::serve(api.or(www).or(webcam))
         .run((settings.ip, settings.port))
         .await;
 }

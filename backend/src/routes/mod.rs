@@ -23,8 +23,9 @@ pub fn api(
         .or(drive_ws(driver, sessions.clone()))
         .or(login(sessions.clone(), pass))
         .or(write_config(sessions.clone(), config_path.clone()))
-        .or(read_config(sessions, config_path))
+        .or(read_config(sessions.clone(), config_path))
 }
+
 pub fn login(
     sessions: Sessions,
     pass: String,
