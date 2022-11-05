@@ -1,24 +1,26 @@
 use crate::elements;
 use crate::Element;
-use gloo_net::http::Request;
 use sha2::{self, Digest, Sha256};
 use std::collections::BTreeSet;
-use std::sync::{Arc, Mutex};
 use wasm_bindgen_futures::spawn_local;
-
+use web_sys::Document;
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 pub struct TemplateApp {
     pass: String,
     elements: Vec<Box<dyn Element>>,
-    openElements: BTreeSet<String>,
+    open_elements: BTreeSet<String>,
 }
 
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             pass: String::new(),
-            elements: vec![Box::new(elements::drive::Drive)],
-            openElements: BTreeSet::new(),
+            elements: vec![
+                Box::new(elements::Webcam),
+                Box::new(elements::Drive),
+                Box::new(elements::Edit::default()),
+            ],
+            open_elements: BTreeSet::new(),
         }
     }
 }
@@ -34,7 +36,7 @@ impl eframe::App for TemplateApp {
         let Self {
             pass,
             elements,
-            openElements,
+            open_elements,
         } = self;
         egui::TopBottomPanel::top("my_panel").show(ctx, |ui| {
             ui.horizontal(|ui| {
@@ -46,12 +48,19 @@ impl eframe::App for TemplateApp {
                     //let key = self.key.clone();
                     let pass = pass.clone();
                     spawn_local(async move {
-                        //let s = key.lock().unwrap();
-                        Request::post("/auth/login")
+                        let client = reqwest::Client::new();
+                        let document = Document::new().unwrap();
+                        let loc = document
+                            .location()
+                            .map(|l| l.origin().unwrap())
+                            .unwrap_or(String::from("http://127.0.0.1:8080"));
+                        client
+                            .post(format!("{}/auth/login", loc))
                             .header("Authorization", &format!("{:X}", Sha256::digest(pass)))
                             .send()
                             .await
-                            .unwrap();
+                            .unwrap()
+                            .status();
                     });
                 };
             });
@@ -65,10 +74,10 @@ impl eframe::App for TemplateApp {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.with_layout(egui::Layout::top_down_justified(egui::Align::LEFT), |ui| {
                         for element in elements {
-                            let mut is_open = openElements.contains(element.name());
+                            let mut is_open = open_elements.contains(element.name());
                             element.show(ctx, &mut is_open);
                             ui.toggle_value(&mut is_open, element.name());
-                            set_open(&mut *openElements, element.name(), is_open);
+                            set_open(&mut *open_elements, element.name(), is_open);
                         }
                     })
                 });
