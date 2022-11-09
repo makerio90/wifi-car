@@ -1,6 +1,5 @@
 use crate::Element;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Document;
 
 pub struct Drive;
 
@@ -12,11 +11,9 @@ impl Drive {
         ];
         spawn_local(async move {
             let client = reqwest::Client::new();
-            let document = Document::new().unwrap();
-            let loc = document
-                .location()
-                .map(|l| l.origin().unwrap())
-                .unwrap_or(String::from("http://127.0.0.1:8080"));
+            let window = web_sys::window().unwrap();
+            let loc = window.location();
+            let loc = loc.origin().unwrap();
             client
                 .post(format!("{}/api/drive", loc))
                 .query(&parems)
@@ -28,6 +25,7 @@ impl Drive {
 }
 
 impl Element for Drive {
+    fn get(&mut self) {}
     fn name(&self) -> &'static str {
         "drive"
     }
@@ -37,11 +35,9 @@ impl Element for Drive {
                 if ui.button("enable").clicked() {
                     spawn_local(async {
                         let client = reqwest::Client::new();
-                        let document = Document::new().unwrap();
-                        let loc = document
-                            .location()
-                            .map(|l| l.origin().unwrap())
-                            .unwrap_or(String::from("http://127.0.0.1:8080"));
+                        let window = web_sys::window().unwrap();
+                        let loc = window.location();
+                        let loc = loc.origin().unwrap();
                         client
                             .post(format!("{}/api/enable", loc))
                             .send()
@@ -52,11 +48,9 @@ impl Element for Drive {
                 if ui.button("disable").clicked() {
                     spawn_local(async {
                         let client = reqwest::Client::new();
-                        let document = Document::new().unwrap();
-                        let loc = document
-                            .location()
-                            .map(|l| l.origin().unwrap())
-                            .unwrap_or(String::from("http://127.0.0.1:8080"));
+                        let window = web_sys::window().unwrap();
+                        let loc = window.location();
+                        let loc = loc.origin().unwrap();
                         client
                             .post(format!("{}/api/disable", loc))
                             .send()

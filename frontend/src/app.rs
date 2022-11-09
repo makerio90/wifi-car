@@ -1,4 +1,3 @@
-use crate::elements;
 use crate::Element;
 use sha2::{self, Digest, Sha256};
 use std::collections::BTreeSet;
@@ -13,12 +12,14 @@ pub struct TemplateApp {
 
 impl Default for TemplateApp {
     fn default() -> Self {
+        use crate::elements::*;
         Self {
             pass: String::new(),
             elements: vec![
-                Box::new(elements::Webcam),
-                Box::new(elements::Drive),
-                Box::new(elements::Edit::default()),
+                Box::new(Controller::default()),
+                //Box::new(Webcam::default()),
+                Box::new(Drive),
+                Box::new(Edit::default()),
             ],
             open_elements: BTreeSet::new(),
         }
@@ -49,11 +50,9 @@ impl eframe::App for TemplateApp {
                     let pass = pass.clone();
                     spawn_local(async move {
                         let client = reqwest::Client::new();
-                        let document = Document::new().unwrap();
-                        let loc = document
-                            .location()
-                            .map(|l| l.origin().unwrap())
-                            .unwrap_or(String::from("http://127.0.0.1:8080"));
+                        let window = web_sys::window().unwrap();
+                        let loc = window.location();
+                        let loc = loc.origin().unwrap();
                         client
                             .post(format!("{}/auth/login", loc))
                             .header("Authorization", &format!("{:X}", Sha256::digest(pass)))
@@ -76,7 +75,9 @@ impl eframe::App for TemplateApp {
                         for element in elements {
                             let mut is_open = open_elements.contains(element.name());
                             element.show(ctx, &mut is_open);
-                            ui.toggle_value(&mut is_open, element.name());
+                            if ui.toggle_value(&mut is_open, element.name()).clicked() {
+                                element.get();
+                            }
                             set_open(&mut *open_elements, element.name(), is_open);
                         }
                     })

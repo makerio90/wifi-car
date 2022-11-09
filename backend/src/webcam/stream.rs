@@ -3,6 +3,7 @@ use hyper::Body;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::{SystemTime, UNIX_EPOCH};
 use v4l::buffer::Type;
 use v4l::io::traits::CaptureStream;
 use v4l::prelude::MmapStream;
@@ -18,11 +19,14 @@ pub async fn stream(dev: Arc<Mutex<Device>>) -> Result<impl warp::Reply, Infalli
         let mut stream =
             MmapStream::with_buffers(&(*dev).lock().unwrap(), Type::VideoCapture, 4).expect("1");
         loop {
+            let start = SystemTime::now();
             let (buf, meta) = stream.next().expect("2");
             let mut data: Vec<u8> = format!(
                 "--boundarydonotcross\r\nContent-Type: image/jpeg\r\nContent-Length: {}\r\nX-Timestamp: {}\r\n\r\n",
                 buf.len() - 2,
-                meta.timestamp
+                start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards").as_millis()
             )
             .into_bytes();
             let mut buf = buf.to_vec();
@@ -44,7 +48,7 @@ pub async fn stream(dev: Arc<Mutex<Device>>) -> Result<impl warp::Reply, Infalli
         .header("Pragma", "no-cache")
         // MIME type. `boundry` is the data sent inbetween each frame
         .header(
-            "content-type",
+            "Content-Type",
             "multipart/x-mixed-replace; boundary=boundarydonotcross",
         )
         // wrap are mpsc chanel as a stream so data is sent in real time

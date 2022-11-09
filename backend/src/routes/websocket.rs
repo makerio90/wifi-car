@@ -3,9 +3,8 @@ use drivers::drivers::Drivers;
 use drivers::Driver;
 use futures_util::{FutureExt, StreamExt};
 use log::error;
-use serde::de::Error;
 use std::sync::{Arc, Mutex};
-use tokio::sync::mpsc::{self, UnboundedSender};
+use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::ws::{Message, WebSocket};
 
@@ -17,20 +16,20 @@ pub async fn drive(ws: WebSocket, driver: Arc<Mutex<Drivers>>) {
 
     tokio::task::spawn(client_rcv.forward(client_ws_sender).map(|result| {
         if let Err(e) = result {
-            log::error!("error sending websocket msg: {}", e);
+            error!(target: "ws_drive:20", "error sending websocket msg: {}", e);
         }
     }));
     while let Some(result) = client_ws_rcv.next().await {
         let msg = match result {
             Ok(msg) => msg,
             Err(e) => {
-                error!(target: "ws_drive" , "error: {:?}", e );
+                error!(target: "ws_drive:27" , "error: {:?}", e );
                 break;
             }
         };
         match handle_msg(msg, driver.clone()) {
             Ok(_) => continue,
-            Err(e) => error!(target: "ws_drive", "error: {:?}", e),
+            Err(e) => error!(target: "ws_drive:33", "error: {:?}", e),
         }
     }
 }
@@ -40,6 +39,7 @@ fn handle_msg(msg: Message, driver: Arc<Mutex<Drivers>>) -> Result<(), Box<dyn s
         Ok(s) => Ok(s),
         Err(()) => Err("error converting to string"),
     }?;
+
     let cmd: DriveQuery = serde_json::from_str(&msg)?;
 
     log::debug!(target: "api", "waiting for driver lock");

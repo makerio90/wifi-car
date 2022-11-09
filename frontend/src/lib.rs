@@ -12,4 +12,7 @@ pub trait Element {
 
     /// Show windows, etc
     fn show(&mut self, ctx: &egui::Context, open: &mut bool);
+
+    /// get data (onclick)
+    fn get(&mut self);
 }
