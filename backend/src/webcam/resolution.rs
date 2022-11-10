@@ -17,18 +17,17 @@ pub async fn get(dev: Arc<Mutex<Device>>) -> Result<impl warp::Reply, Infallible
         .collect();
     Ok(warp::reply::json(&sizes))
 }
+
 pub async fn set(
     Res { width, height }: Res,
     dev: Arc<Mutex<Device>>,
-) -> Result<impl warp::Reply, Infallible> {
+) -> std::io::Result<impl warp::Reply> {
     let dev = (*dev).lock().unwrap();
-    let fmt = dev.format().unwrap();
-    let fmt = dev
-        .set_format(&v4l::Format {
-            width,
-            height,
-            ..fmt
-        })
-        .unwrap();
+    let fmt = dev.format()?;
+    let fmt = dev.set_format(&v4l::Format {
+        width,
+        height,
+        ..fmt
+    })?;
     Ok(warp::reply::json(&(fmt.width, fmt.height)))
 }

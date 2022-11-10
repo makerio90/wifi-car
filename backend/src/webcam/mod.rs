@@ -3,12 +3,24 @@ mod resolution;
 mod stream;
 
 use crate::settings::WebCamSettings;
+use hyper::StatusCode;
 use serde::Deserialize;
+use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use v4l::framesize::FrameSizeEnum;
 use v4l::video::Capture;
 use v4l::{Device, FourCC};
+use warp::http::Response;
 use warp::Filter;
+
+pub fn to_warp_reply(i: std::io::Result<impl warp::Reply>) -> Result<impl warp::Reply, Infallible> {
+    match i {
+        Ok(d) => Ok(d),
+        Err(e) => Ok(Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(e.to_string())),
+    }
+}
 
 pub fn webcam(
     settings: WebCamSettings,
