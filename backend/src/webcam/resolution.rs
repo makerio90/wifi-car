@@ -21,13 +21,19 @@ pub async fn get(dev: Arc<Mutex<Device>>) -> Result<impl warp::Reply, Infallible
 pub async fn set(
     Res { width, height }: Res,
     dev: Arc<Mutex<Device>>,
-) -> std::io::Result<impl warp::Reply> {
+) -> Result<impl warp::Reply, Infallible> {
     let dev = (*dev).lock().unwrap();
-    let fmt = dev.format()?;
-    let fmt = dev.set_format(&v4l::Format {
+    let fmt = dev.format().unwrap();
+    match dev.set_format(&v4l::Format {
         width,
         height,
         ..fmt
-    })?;
-    Ok(warp::reply::json(&(fmt.width, fmt.height)))
+    }) {
+        Ok(fmt) => {
+            Ok(Response::builder().body(serde_json::to_string(&(fmt.width, fmt.height)).unwrap()))
+        }
+        Err(e) => Ok(Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(e.to_string())),
+    }
 }

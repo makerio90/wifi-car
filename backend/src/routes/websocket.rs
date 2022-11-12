@@ -10,7 +10,7 @@ use warp::ws::{Message, WebSocket};
 
 pub async fn drive(ws: WebSocket, driver: Arc<Mutex<Drivers>>) {
     let (client_ws_sender, mut client_ws_rcv) = ws.split();
-    let (_, client_rcv) = mpsc::unbounded_channel();
+    let (client_send, client_rcv) = mpsc::unbounded_channel();
 
     let client_rcv = UnboundedReceiverStream::new(client_rcv);
 
@@ -31,6 +31,7 @@ pub async fn drive(ws: WebSocket, driver: Arc<Mutex<Drivers>>) {
             Ok(_) => continue,
             Err(e) => error!(target: "ws_drive:33", "error: {:?}", e),
         }
+        client_send.send(Ok(Message::text("ACK"))).unwrap();
     }
 }
 
@@ -39,7 +40,7 @@ fn handle_msg(msg: Message, driver: Arc<Mutex<Drivers>>) -> Result<(), Box<dyn s
         Ok(s) => Ok(s),
         Err(()) => Err("error converting to string"),
     }?;
-
+    log::debug!("got msg: {}", msg);
     let cmd: DriveQuery = serde_json::from_str(&msg)?;
 
     log::debug!(target: "api", "waiting for driver lock");
