@@ -9,6 +9,7 @@ use settings::Settings;
 use std::env;
 use std::sync::{Arc, Mutex};
 use warp::Filter;
+
 /// web interface for drivers
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
