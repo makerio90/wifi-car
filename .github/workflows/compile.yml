@@ -2,10 +2,6 @@ on:
   push:
     tags:
       - "cc-*"
-    paths:
-      - "backend/*"
-      - "drivers/*"
-      - "plugin/*"
 
 name: Cross-compile for rpi
 
@@ -28,4 +24,4 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --release --target=${{ matrix.target }}
+          args: --release --target=${{ matrix.target }} --bin backend
