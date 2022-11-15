@@ -50,7 +50,13 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/dist/");
 
-    let webcam = webcam::webcam(settings.web_cam);
+    let webcam = warp::any().and_then(|| {
+        if let Some(cam) = settings.web_cam {
+            Ok(webcam::webcam(cam))
+        } else {
+            Err(warp::reject::not_found())
+        }
+    });
 
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 

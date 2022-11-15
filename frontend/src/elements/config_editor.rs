@@ -2,7 +2,6 @@ use std::sync::{Arc, RwLock};
 
 use crate::Element;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Document;
 
 pub struct Edit {
     config: Arc<RwLock<Option<String>>>,
@@ -43,7 +42,6 @@ impl Element for Edit {
                                 let config = config.clone();
                                 spawn_local(async move {
                                     let client = reqwest::Client::new();
-                                    let document = Document::new().unwrap();
                                     let window = web_sys::window().unwrap();
                                     let loc = window.location();
                                     let loc = loc.origin().unwrap();

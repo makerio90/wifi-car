@@ -5,7 +5,6 @@ mod stream;
 use crate::settings::WebCamSettings;
 use hyper::StatusCode;
 use serde::Deserialize;
-use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use v4l::framesize::FrameSizeEnum;
 use v4l::video::Capture;
@@ -43,6 +42,7 @@ pub fn webcam(
         .or(get_controlls(dev.clone()))
         .or(set_controll(dev))
 }
+
 fn stream_route(
     dev: Arc<Mutex<Device>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {

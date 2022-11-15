@@ -2,7 +2,6 @@ use crate::Element;
 use sha2::{self, Digest, Sha256};
 use std::collections::BTreeSet;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::Document;
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 pub struct TemplateApp {
     pass: String,

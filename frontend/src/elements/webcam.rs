@@ -1,5 +1,3 @@
-use futures_util::StreamExt;
-use wasm_bindgen_futures::spawn_local;
 use web_sys::Document;
 
 use crate::Element;
@@ -36,7 +34,7 @@ impl Element for Webcam {
             let loc = document
                 .location()
                 .map(|l| l.origin().unwrap())
-                .unwrap_or(String::from("http://127.0.0.1:8080"));
+                .unwrap_or_else(|| String::from("http://127.0.0.1:8080"));
             ui.hyperlink_to("open webcam Stream", format!("{}/webcam/stream", loc));
             ui.label("dont forget to stop the stream before changing this!");
 

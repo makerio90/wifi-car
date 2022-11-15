@@ -2,7 +2,7 @@ use super::*;
 use serde::Serialize;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
-use v4l::{framesize::FrameSizeEnum, video::Capture, Device};
+use v4l::{video::Capture, Device};
 
 pub async fn get(dev: Arc<Mutex<Device>>) -> Result<impl warp::Reply, Infallible> {
     let dev = (*dev).lock().unwrap();

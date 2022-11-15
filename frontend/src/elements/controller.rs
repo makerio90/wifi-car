@@ -71,7 +71,7 @@ impl Element for Controller {
                     .enumerate()
                     .collect()
             })
-            .and_then(|v: Vec<(usize, String)>| if v.len() == 0 { None } else { Some(v) });
+            .and_then(|v: Vec<(usize, String)>| if v.is_empty() { None } else { Some(v) });
         let loc = window.location().host().unwrap();
         let ws = WebSocket::open(&format!("ws://{}/ws", loc)).unwrap();
         let (write, _) = ws.split();
@@ -88,13 +88,10 @@ impl Element for Controller {
                     //if we get the gamepad, aways repaint
                     ctx.request_repaint();
                     egui::ComboBox::from_label("Gamepad")
-                        .selected_text(format!(
-                            "{}",
-                            self.selected
+                        .selected_text(                            self.selected
                                 .as_ref()
                                 .map(|s| d[*s].1.clone())
-                                .unwrap_or("None".to_string())
-                        ))
+                                .unwrap_or_else(|| "None".to_string()))
                         .show_ui(ui, |ui| {
                             for gp in d {
                                 ui.selectable_value(&mut self.selected, Some(gp.0), &gp.1);
@@ -102,9 +99,10 @@ impl Element for Controller {
                         });
 
                     ui.separator();
-                    if let Some(_) = &self.selected {
+                    if self.selected.is_some() {
                         let gamepad = self.get_gamepad().unwrap();
                         let axes:    Vec<f64>                    = gamepad.axes().iter().map(|d| d.as_f64().unwrap()).collect();
+                        #[allow(clippy::needless_collect)]
                         let buttons: Vec<web_sys::GamepadButton> = gamepad.buttons().iter().map(|x| x.into()).collect();
 
                         ui.label(format!("gamepad has {} axes and {} buttons", axes.len(), buttons.len()));
@@ -127,16 +125,14 @@ impl Element for Controller {
                         ui.add(egui::ProgressBar::new((query.steer + 1.0 / 2.0) as f32).text("steer"));
 
                         if self.stream {
-                            self.send_ws(query.clone());
+                            self.send_ws(query);
                         }
 
                         ui.horizontal(|ui| {
-                        egui::ComboBox::from_label("throttle").selected_text(format!(
-                            "{}",
-                            self.config.as_ref().ok_or("None")
+                        egui::ComboBox::from_label("throttle").selected_text(                            self.config.as_ref().ok_or("None")
                                 .map(|s| format!("axis {}", s.drive_axis))
-                                .unwrap_or("None".to_string())
-                        ))
+                                .unwrap_or_else(|_| "None".to_string())
+                        )
                         .show_ui(ui, |ui| {
                            for i in 0..axes.len() {
                                ui.selectable_value(&mut config.drive_axis, i, format!("axis {}", i));
@@ -146,12 +142,10 @@ impl Element for Controller {
                         });
 
                         ui.horizontal(|ui| {
-                        egui::ComboBox::from_label("steer").selected_text(format!(
-                            "{}",
-                            self.config.as_ref().ok_or("None")
+                        egui::ComboBox::from_label("steer").selected_text(                            self.config.as_ref().ok_or("None")
                                 .map(|s| format!("axis {}", s.steer_axis))
-                                .unwrap_or("None".to_string())
-                        ))
+                                .unwrap_or_else(|_| "None".to_string())
+                        )
                         .show_ui(ui, |ui| {
                            for i in 0..axes.len() {
                                ui.selectable_value(&mut config.steer_axis, i, format!("axis {}", i));

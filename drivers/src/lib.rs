@@ -1,6 +1,5 @@
 use std::result;
 
-use serde::Serialize;
 pub mod drivers;
 pub trait Driver {
     /// enable the car. do whatever neccicary to get the driver ready to drive

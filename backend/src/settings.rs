@@ -30,7 +30,7 @@ pub struct Settings {
     pub ip: [u8; 4],
     pub port: u16,
     pub password: Pass,
-    pub web_cam: WebCamSettings,
+    pub web_cam: Option<WebCamSettings>,
 }
 
 #[derive(Debug, Deserialize)]

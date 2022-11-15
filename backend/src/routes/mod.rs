@@ -2,7 +2,6 @@ mod api;
 mod auth;
 mod websocket;
 
-use super::Settings;
 use drivers::drivers::Drivers;
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
