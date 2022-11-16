@@ -1,8 +1,10 @@
-mod controll;
+mod control;
 mod resolution;
 mod stream;
 
 use crate::settings::WebCamSettings;
+use env_logger::filter;
+use futures::Future;
 use hyper::StatusCode;
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
@@ -13,34 +15,39 @@ use warp::http::Response;
 use warp::Filter;
 
 pub fn webcam(
-    settings: WebCamSettings,
+    settings: Option<WebCamSettings>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    // create a refrance counted device
-    let dev = Arc::new(Mutex::new(Device::with_path(settings.path).unwrap()));
-    {
-        let dev = (*dev).lock().unwrap();
-        // get the current format
-        let fmt = dev.format().unwrap();
-        // use the MJPEG format
-        let fourcc = FourCC::new(b"MJPG");
-        // use the LOWEST resolution supported by the camera.
-        let (width, height): (u32, u32) = match &dev.enum_framesizes(fourcc).unwrap()[0].size {
-            FrameSizeEnum::Discrete(d) => (d.width, d.height),
-            _ => todo!(),
-        };
-        // update the values we want to change, leave the rest the same
-        dev.set_format(&v4l::Format {
-            width,
-            height,
-            fourcc,
-            ..fmt
-        });
-    }
-    stream_route(dev.clone())
-        .or(get_resolution(dev.clone()))
-        .or(set_resolution(dev.clone()))
-        .or(get_controlls(dev.clone()))
-        .or(set_controll(dev))
+    // create a reference counted device
+    let dev = settings.map(|settings| {
+        let dev = Arc::new(Mutex::new(Device::with_path(settings.path).unwrap()));
+        {
+            let dev = (*dev).lock().unwrap();
+            // get the current format
+            let fmt = dev.format().unwrap();
+            // use the MJPEG format
+            let fourcc = FourCC::new(b"MJPG");
+            // use the LOWEST resolution supported by the camera.
+            let (width, height): (u32, u32) = match &dev.enum_framesizes(fourcc).unwrap()[0].size {
+                FrameSizeEnum::Discrete(d) => (d.width, d.height),
+                _ => todo!(),
+            };
+            // update the values we want to change, leave the rest the same
+            dev.set_format(&v4l::Format {
+                width,
+                height,
+                fourcc,
+                ..fmt
+            });
+        }
+        dev
+    });
+    warp::any().and(reject_if_none(dev)).and_then(|dev| async {
+        stream_route(dev.clone())
+            .or(get_resolution(dev.clone()))
+            .or(set_resolution(dev.clone()))
+            .or(get_controls(dev.clone()))
+            .or(set_control(dev))
+    })
 }
 
 fn stream_route(
@@ -51,13 +58,13 @@ fn stream_route(
         .map(move || dev.clone())
         .and_then(stream::stream)
 }
-fn get_controlls(
+fn get_controls(
     dev: Arc<Mutex<Device>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("webcam" / "control")
         .and(warp::get())
         .map(move || dev.clone())
-        .and_then(controll::get)
+        .and_then(control::get)
 }
 #[derive(Deserialize)]
 pub struct Control {
@@ -77,30 +84,30 @@ pub enum Value {
     CompoundPtr(Vec<u8>),
 }
 
-use v4l::control::Value as ForenValue;
-impl From<Value> for ForenValue {
+use v4l::control::Value as ForeignValue;
+impl From<Value> for ForeignValue {
     fn from(value: Value) -> Self {
         match value {
-            Value::None => ForenValue::None,
-            Value::Integer(v) => ForenValue::Integer(v),
-            Value::Boolean(v) => ForenValue::Boolean(v),
-            Value::String(v) => ForenValue::String(v),
-            Value::CompoundU8(v) => ForenValue::CompoundU8(v),
-            Value::CompoundU16(v) => ForenValue::CompoundU16(v),
-            Value::CompoundU32(v) => ForenValue::CompoundU32(v),
-            Value::CompoundPtr(v) => ForenValue::CompoundPtr(v),
+            Value::None => ForeignValue::None,
+            Value::Integer(v) => ForeignValue::Integer(v),
+            Value::Boolean(v) => ForeignValue::Boolean(v),
+            Value::String(v) => ForeignValue::String(v),
+            Value::CompoundU8(v) => ForeignValue::CompoundU8(v),
+            Value::CompoundU16(v) => ForeignValue::CompoundU16(v),
+            Value::CompoundU32(v) => ForeignValue::CompoundU32(v),
+            Value::CompoundPtr(v) => ForeignValue::CompoundPtr(v),
         }
     }
 }
 
-fn set_controll(
+fn set_control(
     dev: Arc<Mutex<Device>>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("webcam" / "control")
         .and(warp::query::<Control>())
         .and(warp::post())
         .and(warp::any().map(move || dev.clone()))
-        .and_then(controll::set)
+        .and_then(control::set)
 }
 fn get_resolution(
     dev: Arc<Mutex<Device>>,
@@ -123,4 +130,18 @@ fn set_resolution(
         .and(warp::post())
         .and(warp::any().map(move || dev.clone()))
         .and_then(resolution::set)
+}
+// FIXME
+fn reject_if_none<T: Send + Future + Clone>(
+    data: Option<T>,
+) -> impl Filter<Extract = (T,), Error = warp::Rejection> + Clone {
+    warp::any()
+        .and(warp::any().map(move || data.clone()))
+        .and_then(|data| async {
+            if let Some(data) = data {
+                Ok(data)
+            } else {
+                Err(warp::reject::not_found())
+            }
+        })
 }

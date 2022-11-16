@@ -32,7 +32,6 @@ pub fn login(
     warp::path!("auth" / "login")
         .and(warp::post())
         .and(warp::header::exact_ignore_case(
-            // HACK: frontend gloo-net sets all headers to lowercase; but this should be camel case
             "Authorization",
             // TODO: fix mem leak
             Box::<str>::leak(pass.into_boxed_str()),
@@ -139,9 +138,9 @@ pub fn info(
         .and_then(api::info)
 }
 #[derive(Debug)]
-struct Unauthorised;
+struct Unauthorized;
 
-impl warp::reject::Reject for Unauthorised {}
+impl warp::reject::Reject for Unauthorized {}
 
 fn needs_auth(sessions: Sessions) -> impl Filter<Extract = (), Error = Rejection> + Clone {
     warp::cookie::<String>("session")
@@ -150,7 +149,7 @@ fn needs_auth(sessions: Sessions) -> impl Filter<Extract = (), Error = Rejection
             if (*sessions.lock().unwrap()).contains(&session_id) {
                 Ok(())
             } else {
-                Err(warp::reject::custom(Unauthorised))
+                Err(warp::reject::custom(Unauthorized))
             }
         })
         .untuple_one()

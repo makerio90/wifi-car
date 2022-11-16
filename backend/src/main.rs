@@ -30,7 +30,7 @@ async fn main() {
         env!("CARGO_PKG_VERSION")
     );
     if log_enabled!(Level::Debug) {
-        warn!("log::Debug Enabled. Logs may contain dangorus info. for trobleshooting use only")
+        warn!("log::Debug Enabled. Logs may contain dangerous info. for troubleshooting use only")
     }
     let args: Args = Args::parse();
     let config_path: String = args
@@ -50,13 +50,7 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/dist/");
 
-    let webcam = warp::any().and_then(|| {
-        if let Some(cam) = settings.web_cam {
-            Ok(webcam::webcam(cam))
-        } else {
-            Err(warp::reject::not_found())
-        }
-    });
+    let webcam = webcam::webcam(settings.web_cam);
 
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 
