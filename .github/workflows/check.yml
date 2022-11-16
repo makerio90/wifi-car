@@ -22,6 +22,7 @@ jobs:
         continue-on-error: true # WARNING: only for this example, remove it!
         with:
           command: check
+          args: --workspace
 
   test:
     name: Test Suite
@@ -42,6 +43,7 @@ jobs:
         continue-on-error: true # WARNING: only for this example, remove it!
         with:
           command: test
+          args: --workspace 
 
   lints:
     name: Lints
