@@ -1,8 +1,7 @@
 on:
   push:
-    tags:
-      - "cc-*"
-
+    branches:
+      - "main"
 name: Cross-compile for rpi
 
 jobs:
