@@ -4,20 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+webcam = ["futures", "v4l"]
 
 [dependencies]
-base16ct = "0.1.1"
 clap = { version = "3.2.22", features = ["derive"] }
 colored = "2.0.0"
 config = "0.13.2"
 drivers = {path = '../drivers/'}
 env_logger = "0.9.1"
-futures = "0.3.25"
+futures = { version = "0.3.25" , optional = true}# only for cam
 futures-util = "0.3.24"
 hyper = "0.14.20"
 lazy_static = "1.4.0"
 log = "0.4.17"
-quit = "1.1.4"
 rand = "0.8.5"
 serde = "1.0.145"
 serde_derive = "1.0.145"
@@ -25,5 +25,5 @@ serde_json = "1.0.85"
 sha2 = "0.10.6"
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1.10"
-v4l = "0.13.0"
 warp = "0.3"
+v4l = { version = "0.13.0", optional = true}# only for cam

@@ -30,14 +30,18 @@ pub struct Settings {
     pub ip: [u8; 4],
     pub port: u16,
     pub password: Pass,
-    pub web_cam: Option<WebCamSettings>,
+    #[cfg(feature = "webcam")]
+    pub web_cam: WebCamSettings,
 }
 
+#[cfg(feature = "webcam")]
 #[derive(Debug, Deserialize)]
 pub struct WebCamSettings {
     #[serde(default = "default_cam")]
     pub path: String,
 }
+
+#[cfg(feature = "webcam")]
 fn default_cam() -> String {
     "/dev/video0".to_string()
 }

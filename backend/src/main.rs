@@ -1,5 +1,7 @@
 pub mod routes;
 pub mod settings;
+
+#[cfg(feature = "webcam")]
 pub mod webcam;
 
 use clap::Parser;
@@ -50,11 +52,16 @@ async fn main() {
 
     let www = warp::fs::dir("frontend/dist/");
 
+    #[cfg(feature = "webcam")]
     let webcam = webcam::webcam(settings.web_cam);
 
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 
-    warp::serve(api.or(www).or(webcam))
-        .run((settings.ip, settings.port))
-        .await;
+    #[cfg(feature = "webcam")]
+    let routes = api.or(www).or(webcam);
+
+    #[cfg(not(feature = "webcam"))]
+    let routes = api.or(www);
+
+    warp::serve(routes).run((settings.ip, settings.port)).await;
 }

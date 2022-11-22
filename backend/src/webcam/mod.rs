@@ -3,8 +3,6 @@ mod resolution;
 mod stream;
 
 use crate::settings::WebCamSettings;
-use env_logger::filter;
-use futures::Future;
 use hyper::StatusCode;
 use serde::Deserialize;
 use std::sync::{Arc, Mutex};
@@ -15,39 +13,34 @@ use warp::http::Response;
 use warp::Filter;
 
 pub fn webcam(
-    settings: Option<WebCamSettings>,
+    settings: WebCamSettings,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     // create a reference counted device
-    let dev = settings.map(|settings| {
-        let dev = Arc::new(Mutex::new(Device::with_path(settings.path).unwrap()));
-        {
-            let dev = (*dev).lock().unwrap();
-            // get the current format
-            let fmt = dev.format().unwrap();
-            // use the MJPEG format
-            let fourcc = FourCC::new(b"MJPG");
-            // use the LOWEST resolution supported by the camera.
-            let (width, height): (u32, u32) = match &dev.enum_framesizes(fourcc).unwrap()[0].size {
-                FrameSizeEnum::Discrete(d) => (d.width, d.height),
-                _ => todo!(),
-            };
-            // update the values we want to change, leave the rest the same
-            dev.set_format(&v4l::Format {
-                width,
-                height,
-                fourcc,
-                ..fmt
-            });
-        }
-        dev
-    });
-    warp::any().and(reject_if_none(dev)).and_then(|dev| async {
-        stream_route(dev.clone())
-            .or(get_resolution(dev.clone()))
-            .or(set_resolution(dev.clone()))
-            .or(get_controls(dev.clone()))
-            .or(set_control(dev))
-    })
+    let dev = Arc::new(Mutex::new(Device::with_path(settings.path).unwrap()));
+    {
+        let dev = (*dev).lock().unwrap();
+        // get the current format
+        let fmt = dev.format().unwrap();
+        // use the MJPEG format
+        let fourcc = FourCC::new(b"MJPG");
+        // use the LOWEST resolution supported by the camera.
+        let (width, height): (u32, u32) = match &dev.enum_framesizes(fourcc).unwrap()[0].size {
+            FrameSizeEnum::Discrete(d) => (d.width, d.height),
+            _ => todo!(),
+        };
+        // update the values we want to change, leave the rest the same
+        dev.set_format(&v4l::Format {
+            width,
+            height,
+            fourcc,
+            ..fmt
+        });
+    }
+    stream_route(dev.clone())
+        .or(get_resolution(dev.clone()))
+        .or(set_resolution(dev.clone()))
+        .or(get_controls(dev.clone()))
+        .or(set_control(dev))
 }
 
 fn stream_route(
@@ -130,18 +123,4 @@ fn set_resolution(
         .and(warp::post())
         .and(warp::any().map(move || dev.clone()))
         .and_then(resolution::set)
-}
-// FIXME
-fn reject_if_none<T: Send + Future + Clone>(
-    data: Option<T>,
-) -> impl Filter<Extract = (T,), Error = warp::Rejection> + Clone {
-    warp::any()
-        .and(warp::any().map(move || data.clone()))
-        .and_then(|data| async {
-            if let Some(data) = data {
-                Ok(data)
-            } else {
-                Err(warp::reject::not_found())
-            }
-        })
 }
