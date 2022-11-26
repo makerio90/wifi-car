@@ -1,4 +1,4 @@
-use crate::{Driver, DriverError, Result};
+use crate::driver::{Driver, DriverError, Result};
 use rppal::gpio::{Gpio, OutputPin};
 use serde_derive::Deserialize;
 // simple skid steer car using L298P drivers

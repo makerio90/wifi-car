@@ -1,4 +1,4 @@
-use crate::{Driver, Result};
+use crate::driver::{Driver, Result};
 pub mod demo;
 pub mod simple_skid_steer;
 use serde_derive::Deserialize;

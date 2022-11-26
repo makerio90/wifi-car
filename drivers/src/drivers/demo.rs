@@ -1,4 +1,4 @@
-use crate::{Driver, DriverError, Result};
+use crate::driver::{Driver, DriverError, Result};
 use colored::Colorize;
 use serde_derive::Deserialize;
 /// demo driver for testing
