@@ -3,9 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 # rust-clippy is a tool that runs a bunch of lints to catch common
-# mistakes in your Rust code and help improve your Rust code.
-# More details at https://github.com/rust-lang/rust-clippy
-# and https://rust-lang.github.io/rust-clippy/
+# test and check code
 
 name: rust-clippy analyze
 
@@ -19,7 +17,7 @@ on:
     - cron: '28 16 * * 6'
 
 jobs:
-  rust-clippy-analyze:
+  clippy:
     name: Run rust-clippy analyzing
     runs-on: ubuntu-latest
     permissions:
@@ -45,6 +43,7 @@ jobs:
         run:
           cargo clippy
           --all-features
+          --workspace
           --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
         continue-on-error: true
 
@@ -53,3 +52,23 @@ jobs:
         with:
           sarif_file: rust-clippy-results.sarif
           wait-for-processing: true
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        continue-on-error: true # WARNING: only for this example, remove it!
+        with:
+          command: test
+          args: --workspace 
