@@ -89,13 +89,7 @@ impl Driver for SkidSteer {
     fn is_ready(&self) -> bool {
         self.is_enabled
     }
-    fn has_break(&self) -> bool {
-        false
-    }
-    fn is_proportional(&self) -> (bool, bool) {
-        (true, true)
-    }
-    fn estop(&mut self) -> Result<()> {
+    fn disable(&mut self) -> Result<()> {
         if !self.is_enabled {
             return Err(DriverError::NotEnabled);
         }
@@ -107,10 +101,12 @@ impl Driver for SkidSteer {
             .as_mut()
             .ok_or(DriverError::ExpectedSomeFoundNone)?
             .set_low();
-        Ok(())
-    }
-    fn disable(&mut self) -> Result<()> {
-        self.estop()?;
+        self.is_enabled = false;
+        self.gpio = None;
+        self.ena = None;
+        self.enb = None;
+        self.rva = None;
+        self.rvb = None;
         Ok(())
     }
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {

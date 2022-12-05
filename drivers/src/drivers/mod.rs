@@ -41,24 +41,6 @@ impl Driver for Drivers {
             Drivers::Demo(s) => s.drive(accelerate, steer),
         }
     }
-    fn estop(&mut self) -> Result<()> {
-        match self {
-            Drivers::SimpleSkidSteer(s) => s.estop(),
-            Drivers::Demo(s) => s.estop(),
-        }
-    }
-    fn has_break(&self) -> bool {
-        match self {
-            Drivers::SimpleSkidSteer(s) => s.has_break(),
-            Drivers::Demo(s) => s.has_break(),
-        }
-    }
-    fn is_proportional(&self) -> (bool, bool) {
-        match self {
-            Drivers::SimpleSkidSteer(s) => s.is_proportional(),
-            Drivers::Demo(s) => s.is_proportional(),
-        }
-    }
     fn disable(&mut self) -> Result<()> {
         match self {
             Drivers::SimpleSkidSteer(s) => s.disable(),

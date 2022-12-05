@@ -13,15 +13,6 @@ pub trait Driver {
     /// 1 for full speed ahead, 0 for no change, -1 is reverse/brake.
     /// -1 for full steer left, 1 for full speed right.
     fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()>;
-    /// stop the car, no mater what.
-    /// this is sort of like an e-stop.
-    /// this should get pulled as a fialsafe.
-    fn estop(&mut self) -> Result<()>;
-    /// returns true if the vichle has a brake.
-    fn has_break(&self) -> bool;
-    /// returns a tuple for if the veicle has proportional controls
-    /// (has_proportional_steering,has_proportional_drive)
-    fn is_proportional(&self) -> (bool, bool);
     /// soft stop.
     /// this is for a controlled stutdown, and is as calm as possible
     /// this is for when you hit the 'end' button

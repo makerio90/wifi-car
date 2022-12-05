@@ -1,3 +1,4 @@
 pub mod driver;
-mod drivers;
+pub mod drivers;
 pub mod peripheral;
+pub mod peripherals;

@@ -63,16 +63,6 @@ impl Driver for Demo {
         );
         Ok(())
     }
-    fn estop(&mut self) -> Result<()> {
-        println!("{} estop pulled", "dummy:".bold().blue());
-        Ok(())
-    }
-    fn has_break(&self) -> bool {
-        true
-    }
-    fn is_proportional(&self) -> (bool, bool) {
-        (true, true)
-    }
     fn disable(&mut self) -> Result<()> {
         self.enabled = false;
         println!("{} disabled;", "dummy:".bold().blue());

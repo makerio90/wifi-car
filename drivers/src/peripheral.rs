@@ -1,57 +1,58 @@
-use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 pub trait Peripheral {
-    /// struture for data in.
+    /// low-level config.
+    /// like pin assighnments;
+    type Config<'a>: Deserialize<'a>;
 
     ///initalises the peripheral (duh)
-    fn init<'a>() -> Self;
+    fn init<'a>(config: Self::Config<'a>) -> Self;
 
-    /// status cmd. ~1 sentance that tell the server how its doing.
-    /// think `all systems OK` and `solar cell at 15.7V` kind of think. in an error
-    /// it would say something like `!system oflline! short detected`
-    /// NOTE: do not just pipe stderror out, this is a status line not a log.
-    /// NOTE: this will be called very rapidly, make it quick.
-    fn status(&self) -> Result<String, String>;
+    /// list all editable options
+    fn config_get(&self) -> Vec<Value<ConfigValue>>;
 
-    /// current values being used. make it quick!
-    fn values<'a>(&self) -> HashMap<String, Value>;
+    /// runtime config
+    /// things you would want to updtate at runtime.
+    fn config_set(&mut self, id: u8, value: ConfigValue) -> PerError<()>;
 
-    /// data in
-    /// bout what you'd expect.
-    /// ran in a seprate thread, take as mutch time as you need.
-    /// TODO: beter errors
-    fn update<'a>(&mut self, in_data: HashMap<String, Value>) -> HashMap<String, Value>;
+    /// rc values
+    fn rc(&self) -> Vec<Value<RcValue>>;
+
+    /// send rc values
+    /// it is only possible to update them all at once
+    /// they will be sent in `id` order
+    fn send(&mut self, values: Vec<RcValue>);
 }
-
-pub struct Example {
-    b: i32,
-    a: i32,
+pub enum RcValue {
+    /// analog value between 0 - 1
+    Analog(f64),
+    /// momentary value
+    Momentary,
+    /// toggle switch
+    Continus(bool),
 }
-
-impl Peripheral for Example {
-    fn init() -> Self {
-        Self { a: 0, b: 0 }
-    }
-
-    fn values<'a>(&self) -> HashMap<String, Value> {
-        Vec<("num a", Value::Num { value: self.a, min: i32::MIN, max: i32::MAX}),
-        ("num b", Value::Num { value: self.b, min: i32::MIN, max: i32::MAX})>.into()
-    }
-
-    fn status(&self) -> Result<String, String> {
-        Ok("lookin Good!".to_string())
-    }
-
-    fn update<'a>(&mut self, in_data: HashMap<String, Value>) -> HashMap<String, Value>{
-        *self = Example { a:
-                      in_data.get("num a").unwrap().value, b:
-                      in_data.get("num b").unwrap().value};
-        vec![].into()
-    }
+pub struct Value<T> {
+    /// name
+    pub name: String,
+    /// value
+    pub value: T,
+    /// id
+    pub id: u8,
 }
-
-enum Value {
+pub enum ConfigValue {
+    /// number between min an max
     Num { value: i32, min: u16, max: u16 },
+    /// string
+    /// value is default
+    String(String),
+    /// true / false switch
+    /// value is default
+    Bool(bool),
+    /// momentary, like a reset button
+    Momentary,
+}
+pub type PerError<T> = Result<T, PeripheralError>;
+pub enum PeripheralError {
+    BadId,
+    WrongType,
 }
