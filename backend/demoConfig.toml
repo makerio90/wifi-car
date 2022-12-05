@@ -5,5 +5,9 @@ password.Raw = "test"
 [driver.Demo]
 printme="line printed from toml"
 
-#[web_cam]
-#path="/dev/video0"
+[web_cam]
+path="/dev/video0"
+
+[[peripherals]]
+name="demo"
+per.Demo.infocmd = "here"

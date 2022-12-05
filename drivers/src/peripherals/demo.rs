@@ -1,4 +1,5 @@
 use crate::peripheral::{self, ConfigValue, PerError, Peripheral, RcValue, Value};
+use log::info;
 use serde::Deserialize;
 
 pub struct Demo {
@@ -14,7 +15,7 @@ pub struct DemoConfig {
 impl Peripheral for Demo {
     type Config<'a> = DemoConfig;
     fn init<'a>(config: Self::Config<'a>) -> Self {
-        println!("DemoPeripheral: starting up! {}", config.infocmd);
+        info!(target: "DemoPeripheral", "starting up! {}", config.infocmd);
         Self {
             a: 0,
             b: 0,
@@ -63,7 +64,7 @@ impl Peripheral for Demo {
             1 => {
                 if let ConfigValue::String(string) = value {
                     self.string = string;
-                    println!("changed `string` to {}", self.string);
+                    info!(target: "DemoPeripheral", "changed `string` to {}", self.string);
                     Ok(())
                 } else {
                     Err(peripheral::PeripheralError::WrongType)
@@ -93,7 +94,7 @@ impl Peripheral for Demo {
             self.b = value as u32
         }
         if let RcValue::Momentary = values[1] {
-            println!("got cmd to print {}", self.string)
+            info!(target: "DemoPeripheral", "got cmd to print {}", self.string)
         }
     }
 }

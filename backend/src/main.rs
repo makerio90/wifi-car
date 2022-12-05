@@ -1,3 +1,4 @@
+pub mod peripherals;
 pub mod routes;
 pub mod settings;
 
@@ -47,6 +48,8 @@ async fn main() {
             panic!()
         }
     };
+
+    let _peripherals = peripherals::peripherals(settings.peripherals);
 
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 

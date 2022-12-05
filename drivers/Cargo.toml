@@ -13,6 +13,7 @@ interface for controlling a car/rover over wifi
 
 [dependencies]
 colored = "2.0.0"
+log = "0.4.17"
 rppal = "0.14.0"
 serde = { version = "1.0.144", features = ["derive"] }
 serde_derive = "1.0.145"

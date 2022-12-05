@@ -7,6 +7,7 @@ use crate::peripheral::{ConfigValue, Peripheral, RcValue, Value};
 pub enum Peripherals {
     Demo(demo::Demo),
 }
+
 #[derive(Debug, Deserialize)]
 pub enum PeripheralConfig {
     Demo(demo::DemoConfig),

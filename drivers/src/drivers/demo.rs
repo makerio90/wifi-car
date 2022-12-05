@@ -1,5 +1,5 @@
 use crate::driver::{Driver, DriverError, Result};
-use colored::Colorize;
+use log::info;
 use serde_derive::Deserialize;
 /// demo driver for testing
 pub struct Demo {
@@ -12,7 +12,7 @@ pub struct Config {
 
 impl Demo {
     pub fn new(config: Config) -> Self {
-        println!("{}", config.printme);
+        info!(target: "DemoDriver", "{}", config.printme);
         Demo { enabled: false }
     }
 }
@@ -27,7 +27,7 @@ impl Default for Demo {
 impl Driver for Demo {
     fn enable(&mut self) -> Result<()> {
         self.enabled = true;
-        println!("{} enabled!", "dummy:".bold().blue());
+        info!(target: "DemoDriver", "enabled!");
         Ok(())
     }
     fn is_ready(&self) -> bool {
@@ -53,9 +53,8 @@ impl Driver for Demo {
         } else {
             "right"
         };
-        println!(
-            "{} got command to drive {} at speed {}% and steer {} {}%",
-            "dummy:".bold().blue(),
+        info!(target: "Dummy",
+            "got command to drive {} at speed {}% and steer {} {}%",
             drive_dir,
             drive_speed,
             steer_dir,
@@ -65,7 +64,7 @@ impl Driver for Demo {
     }
     fn disable(&mut self) -> Result<()> {
         self.enabled = false;
-        println!("{} disabled;", "dummy:".bold().blue());
+        info!(target: "Dummy", "disabled;");
         Ok(())
     }
 }

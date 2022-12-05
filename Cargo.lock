@@ -653,6 +653,7 @@ name = "drivers"
 version = "1.0.0"
 dependencies = [
  "colored",
+ "log",
  "rppal",
  "serde",
  "serde_derive",

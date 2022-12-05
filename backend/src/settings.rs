@@ -40,8 +40,8 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize)]
 pub struct Per {
-    name: String,
-    per: PeripheralConfig,
+    pub name: String,
+    pub per: PeripheralConfig,
 }
 
 #[cfg(feature = "webcam")]
