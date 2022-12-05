@@ -6,7 +6,7 @@ pub struct Demo {
     b: u32,
     string: String,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct DemoConfig {
     /// text to print at startup
     infocmd: String,

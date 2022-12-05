@@ -4,11 +4,11 @@ use serde::Deserialize;
 
 use crate::peripheral::{ConfigValue, Peripheral, RcValue, Value};
 
-enum Peripherals {
+pub enum Peripherals {
     Demo(demo::Demo),
 }
-#[derive(Deserialize)]
-enum PeripheralConfig {
+#[derive(Debug, Deserialize)]
+pub enum PeripheralConfig {
     Demo(demo::DemoConfig),
 }
 

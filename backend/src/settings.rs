@@ -4,7 +4,7 @@ use config::Config;
 use config::ConfigError;
 use config::File;
 use drivers::drivers::DriverConfig;
-use drivers::peripheral::Peripheral;
+use drivers::peripherals::PeripheralConfig;
 use log::{debug, warn};
 use serde_derive::Deserialize;
 use sha2::{Digest, Sha256};
@@ -38,9 +38,10 @@ pub struct Settings {
     pub web_cam: WebCamSettings,
 }
 
-struct Per {
+#[derive(Debug, Deserialize)]
+pub struct Per {
     name: String,
-    per: Peripherals,
+    per: PeripheralConfig,
 }
 
 #[cfg(feature = "webcam")]
@@ -54,6 +55,7 @@ pub struct WebCamSettings {
 fn default_cam() -> String {
     "/dev/video0".to_string()
 }
+
 impl Settings {
     pub fn new(path: &str) -> Result<Self, ConfigError> {
         let s = Config::builder()
