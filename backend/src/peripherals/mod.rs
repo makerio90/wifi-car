@@ -16,6 +16,6 @@ pub fn peripherals(peripherals: Vec<Per>) {
     }
 
     for peripheral in peripheral_map {
-        debug!(r#"{}"#, peripheral.0)
+        debug!("{}", peripheral.0)
     }
 }
