@@ -1,5 +1,5 @@
+use drivers::driver::Driver;
 use drivers::drivers::Drivers;
-use drivers::Driver;
 use hyper::body::Bytes;
 use log::{debug, info};
 use std::convert::Infallible;

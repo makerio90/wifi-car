@@ -1,13 +1,13 @@
 use crate::peripheral::{self, ConfigValue, PerError, Peripheral, RcValue, Value};
 use serde::Deserialize;
 
-struct Demo {
+pub struct Demo {
     a: u32,
     b: u32,
     string: String,
 }
 #[derive(Deserialize)]
-struct DemoConfig {
+pub struct DemoConfig {
     /// text to print at startup
     infocmd: String,
 }

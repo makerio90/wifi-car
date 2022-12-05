@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use config::Config;
 use config::ConfigError;
 use config::File;
 use drivers::drivers::DriverConfig;
+use drivers::peripheral::Peripheral;
 use log::{debug, warn};
 use serde_derive::Deserialize;
 use sha2::{Digest, Sha256};
@@ -30,8 +33,14 @@ pub struct Settings {
     pub ip: [u8; 4],
     pub port: u16,
     pub password: Pass,
+    pub peripherals: Vec<Per>,
     #[cfg(feature = "webcam")]
     pub web_cam: WebCamSettings,
+}
+
+struct Per {
+    name: String,
+    per: Peripherals,
 }
 
 #[cfg(feature = "webcam")]

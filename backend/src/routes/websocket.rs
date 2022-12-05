@@ -1,6 +1,6 @@
 use super::DriveQuery;
+use drivers::driver::Driver;
 use drivers::drivers::Drivers;
-use drivers::Driver;
 use futures_util::{FutureExt, StreamExt};
 use log::error;
 use std::sync::{Arc, Mutex};
