@@ -49,7 +49,7 @@ async fn main() {
         }
     };
 
-    let _peripherals = peripherals::peripherals(settings.peripherals);
+    let peripherals = peripherals::peripherals(settings.peripherals);
 
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 
@@ -61,10 +61,10 @@ async fn main() {
     let api = routes::api(driver, config_path, settings.password.get_hash().unwrap());
 
     #[cfg(feature = "webcam")]
-    let routes = api.or(www).or(webcam);
+    let routes = api.or(www).or(webcam).or(peripherals);
 
     #[cfg(not(feature = "webcam"))]
-    let routes = api.or(www);
+    let routes = api.or(www).or(peripherals);
 
     warp::serve(routes).run((settings.ip, settings.port)).await;
 }
