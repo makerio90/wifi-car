@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub trait Peripheral {
     /// low-level config.
@@ -31,6 +31,8 @@ pub enum RcValue {
     /// toggle switch
     Continus(bool),
 }
+
+#[derive(Serialize)]
 pub struct Value<T> {
     /// name
     pub name: String,
@@ -39,6 +41,8 @@ pub struct Value<T> {
     /// id
     pub id: u8,
 }
+
+#[derive(Serialize, Deserialize)]
 pub enum ConfigValue {
     /// number between min an max
     Num { value: i32, min: u16, max: u16 },
