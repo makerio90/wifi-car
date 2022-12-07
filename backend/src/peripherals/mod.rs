@@ -57,7 +57,9 @@ fn set_config(
     peripherals: PeripheralMap,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     warp::path!("peripherals" / String / "config" / u8)
-        .and(warp::query::<peripheral::ConfigValue>())
+        // Only accept bodies smaller than 1kb...
+        .and(warp::body::content_length_limit(1024))
+        .and(warp::body::json())
         .and(warp::post())
         .and(get_map(peripherals))
         .and_then(config::set)
