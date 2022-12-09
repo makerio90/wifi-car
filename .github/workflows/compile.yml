@@ -1,4 +1,4 @@
-name: Cross-compile for rpi
+name: Ci
 
 on:
   push:
