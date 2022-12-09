@@ -2,6 +2,12 @@ on:
   push:
     branches:
       - "main"
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'release build'
+        required: false
+        type: boolean
 name: Cross-compile for rpi
 
 jobs:
@@ -14,13 +20,48 @@ jobs:
           - armv7-unknown-linux-gnueabihf
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      
+      - name: "install toolchain"
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: ${{ matrix.target }}
           override: true
-      - uses: actions-rs/cargo@v1
+          
+      - name: "compile backend"
+        uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: --release --target=${{ matrix.target }} --bin backend
+      
+      - run: cd frondend
+      - name: "install trunk"
+        run: cargo install --locked trunk
+      - name: "build frontend"
+        run: trunk build --release
+      - run: cd ../
+      
+      - name: create pkg structure
+        run: |
+          mkdir -p .debpkg/usr/local/bin
+          mkdir -p .debpkg/usr/local/etc
+          mv backend/target/release/backend .debpkg/usr/local/
+          mv fronend/dist/* .debpkg/usr/local/etc/wifi-car/
+          
+      - uses: jiro4989/build-deb-action@v2
+        with:
+          package: wifi-car
+          package_root: .debpkg
+          maintainer: makerio
+          version: ${{ github.ref }}
+          arch: ${{ matrix.target }}
+          depends: 'v4l'
+          desc: 'lets you controll an rc car over the internet'
+          
+      - name: get pkg
+        uses: actions/upload-artifact@v3
+        with:
+          name: deb file
+          path: ./*.deb
+      
