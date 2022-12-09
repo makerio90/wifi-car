@@ -1,3 +1,5 @@
+name: Cross-compile for rpi
+
 on:
   push:
     branches:
@@ -8,8 +10,6 @@ on:
         description: 'release build'
         required: false
         type: boolean
-name: Cross-compile for rpi
-
 jobs:
   build:
     name: Build
