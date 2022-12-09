@@ -1,15 +1,13 @@
-name: Ci
+name: "Ci for Rpi"
 
 on:
-  push:
-    branches:
-      - "main"
   workflow_dispatch:
     inputs:
       release:
         description: 'release build'
         required: false
         type: boolean
+  
 jobs:
   build:
     name: Build
