@@ -23,6 +23,7 @@ pub trait Peripheral {
     /// they will be sent in `id` order
     fn send(&mut self, values: Vec<RcValue>);
 }
+#[derive(Serialize)]
 pub enum RcValue {
     /// analog value between 0 - 1
     Analog(f64),

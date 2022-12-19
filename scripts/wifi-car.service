@@ -1,0 +1,13 @@
+[Unit]
+Description=wifi-car rover control server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Restart=always
+Type=exec
+ExecStart=wifi-car
+Environment=
+
+[Install]
+WantedBy=multi-user.target

@@ -1,65 +1,143 @@
-name: "Ci for Rpi"
+name: "Continuous Deployment"
 
 on:
   workflow_dispatch:
     inputs:
       release:
-        description: 'release build'
+        description: "release build"
         required: false
         type: boolean
-  
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
 jobs:
-  build:
-    name: Build
+  build-frontend:
+    name: frontend cd
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target:
-          - armv7-unknown-linux-gnueabihf
     steps:
       - uses: actions/checkout@v2
-      
+
+      - name: "Cache"
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/trunk
+            ~/.rustup/toolchains
+            ~/.rustup/update-hashes
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: "install toolchain"
+        uses: actions-rs/toolchain@v1
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          toolchain: stable
+          override: true
+
       - name: "install toolchain"
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: ${{ matrix.target }}
+          target: wasm32-unknown-unknown
+          override: false
+
+      - name: "install trunk"
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: cargo install trunk
+
+      - name: build
+        run: trunk build --release
+        working-directory: frontend
+
+      - name: upload frontend
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend
+          path: ./frontend/dist/*
+
+  build-backend:
+    name: backend cd for ${{ matrix.job.arch }}
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        job:
+          - target: x86_64-unknown-linux-gnu
+            arch: amd64
+          - target: arm-unknown-linux-gnueabihf
+            arch: armhf
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Cache"
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.rustup/toolchains/${{ matrix.job.target }}
+            ~/.rustup/update-hashes/${{ matrix.job.target }}
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: "install toolchain"
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.job.target }}
           override: true
-          
+
+      - name: "install build deps"
+        run: |
+          dpkg --add-architecture ${{ matrix.job.arch }}
+          sudo touch /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          sudo cp ./scripts/arm-cross-compile-sources.list /etc/apt/sources.list.d/arm-cross-compile-sources.list
+          sed "s/deb/deb [arch=amd64]/" /etc/apt/sources.list | sudo tee /etc/apt/sources.list
+          #cat /ect/apt/sources.list
+          sudo apt update
+          sudo apt install -fy libv4l-dev:${{ matrix.job.arch }} libclang-11-dev:${{ matrix.job.arch }} gcc-arm-linux-gnueabihf
+
       - name: "compile backend"
         uses: actions-rs/cargo@v1
         with:
-          use-cross: true
+          #use-cross: true
           command: build
-          args: --release --target=${{ matrix.target }} --bin backend
-      
-      - run: cd frondend
-      - name: "install trunk"
-        run: cargo install --locked trunk
-      - name: "build frontend"
-        run: trunk build --release
-      - run: cd ../
-      
+          args: --release --target=${{ matrix.job.target }} --bin backend
+
       - name: create pkg structure
         run: |
           mkdir -p .debpkg/usr/local/bin
-          mkdir -p .debpkg/usr/local/etc
-          mv backend/target/release/backend .debpkg/usr/local/
-          mv fronend/dist/* .debpkg/usr/local/etc/wifi-car/
-          
+          # for some reson no one uses /usr/local/etc
+          mkdir -p .debpkg/etc/wifi-car
+          mkdir -p .debpkg/etc/systemd/system
+          mv ./target/${{ matrix.job.target }}/release/backend .debpkg/usr/local/bin/wifi-car
+          mkdir -p .debpkg/DEBIAN
+          cp scripts/wifi-car.service .debpkg/etc/systemd/system/
+          cp scripts/postinst.sh .debpkg/DEBIAN/postinst
+          cp scripts/preinst.sh .debpkg/DEBIAN/preinst
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: frontend
+          path: .debpkg/etc/wifi-car/
+
       - uses: jiro4989/build-deb-action@v2
         with:
           package: wifi-car
           package_root: .debpkg
           maintainer: makerio
-          version: ${{ github.ref }}
-          arch: ${{ matrix.target }}
-          depends: 'v4l'
-          desc: 'lets you controll an rc car over the internet'
-          
+          version: "0.0.0"
+          arch: ${{ matrix.job.arch }}
+          depends: "libv4l-dev, systemd"
+          desc: "lets you controll an rc car over the internet"
+          priority: "Extra"
+
       - name: get pkg
         uses: actions/upload-artifact@v3
         with:
-          name: deb file
+          name: ${{ matrix.job.arch }}-deb-pkg
           path: ./*.deb
-      

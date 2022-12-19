@@ -20,6 +20,9 @@ struct Args {
     /// path to the config file
     #[clap(short, long, value_parser)]
     config_path: Option<String>,
+    /// path to the static site
+    #[clap(short, long, value_parser)]
+    static_path: Option<String>,
 }
 
 #[tokio::main]
@@ -36,10 +39,10 @@ async fn main() {
         warn!("log::Debug Enabled. Logs may contain dangerous info. for troubleshooting use only")
     }
     let args: Args = Args::parse();
-    let config_path: String = args
-        .config_path
-        .clone()
-        .unwrap_or(format!("{}/.config/wificar.toml", env!("HOME")));
+    let config_path: String = args.config_path.clone().unwrap_or(format!(
+        "{}/.config/wificar.toml",
+        env::var_os("HOME").unwrap().into_string().unwrap()
+    ));
 
     let settings: Settings = match Settings::new(&config_path) {
         Ok(s) => s,
@@ -53,7 +56,11 @@ async fn main() {
 
     let driver = Arc::new(Mutex::new(Drivers::new(settings.driver)));
 
-    let www = warp::fs::dir("frontend/dist/");
+    let www = warp::fs::dir(
+        args.static_path
+            .clone()
+            .unwrap_or("/etc/wifi-car/".to_string()),
+    );
 
     #[cfg(feature = "webcam")]
     let webcam = webcam::webcam(settings.web_cam);

@@ -28,6 +28,25 @@ pub fn peripherals(
         .or(get_config(pers.clone()))
         .or(set_config(pers))
 }
+/*
+pub fn ws(
+    peripherals: PeripheralMap,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("pws")
+        .and(warp::ws())
+        .and(get_map(peripherals))
+        .map(|ws: warp::ws::Ws, driver| ws.on_upgrade(move |socket| ws::send_RC(socket, driver)))
+}
+*/
+
+fn get_chanel_map(
+    peripherals: PeripheralMap,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
+    warp::path!("peripherals" / String / "getMap")
+        .and(warp::get())
+        .and(get_map(peripherals))
+        .and_then(meta::get_map)
+}
 
 fn get_map(
     peripherals: PeripheralMap,
