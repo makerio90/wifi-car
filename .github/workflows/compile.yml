@@ -29,7 +29,7 @@ jobs:
             ~/.rustup/toolchains
             ~/.rustup/update-hashes
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: frontend-${{ hashFiles('**/Cargo.lock') }}
 
       - name: "install toolchain"
         uses: actions-rs/toolchain@v1
@@ -66,10 +66,12 @@ jobs:
     strategy:
       matrix:
         job:
-          - target: x86_64-unknown-linux-gnu
-            arch: amd64
-          - target: arm-unknown-linux-gnueabihf
+          #- target: x86_64-unknown-linux-gnu
+          #  arch: amd64
+          #  foreign: false
+          - target: armv7-unknown-linux-gnueabihf
             arch: armhf
+            foreign: true
     steps:
       - uses: actions/checkout@v2
 
@@ -82,7 +84,7 @@ jobs:
             ~/.rustup/toolchains/${{ matrix.job.target }}
             ~/.rustup/update-hashes/${{ matrix.job.target }}
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: backend-${{ matrix.job.arch }}-${{ hashFiles('**/Cargo.lock') }}-2
 
       - name: "install toolchain"
         uses: actions-rs/toolchain@v1
@@ -91,16 +93,40 @@ jobs:
           target: ${{ matrix.job.target }}
           override: true
 
-      - name: "install build deps"
+      - name: "add ${{ matrix.job.arch }} as a foreign architecture"
+        if: ${{ matrix.job.foreign }}
         run: |
           dpkg --add-architecture ${{ matrix.job.arch }}
           sudo touch /etc/apt/sources.list.d/arm-cross-compile-sources.list
           sudo cp ./scripts/arm-cross-compile-sources.list /etc/apt/sources.list.d/arm-cross-compile-sources.list
           sed "s/deb/deb [arch=amd64]/" /etc/apt/sources.list | sudo tee /etc/apt/sources.list
-          #cat /ect/apt/sources.list
-          sudo apt update
-          sudo apt install -fy libv4l-dev:${{ matrix.job.arch }} libclang-11-dev:${{ matrix.job.arch }} gcc-arm-linux-gnueabihf
 
+      - name: "install aptitude"
+        run: |
+          sudo apt update
+          sudo apt-get install -y aptitude apt-utils
+
+      - name: "install build dependances"
+        run: |
+          sudo aptitude install -fvy libv4l-dev:${{ matrix.job.arch }} libclang-dev:${{matrix.job.arch}} gcc-arm-linux-gnueabihf
+          find /usr/lib/ -name "libclang.so" -or -name "libclang-*.so" -or -name "libclang.so.*" -or -name "libclang-*.so.*"
+
+          # 11/28/22 going to sleep 2nite
+          # current status so i dont forget.
+          # apitude says 2 packages are not installable:
+          # libclang-dev:armhf : Depends: libclang-10-dev:armhf (>= 10~) but it is not installable
+          #  libv4l-dev:armhf : Depends: libv4l-0:armhf (= 1.18.0-2build1) but it is not installable
+          #                     Depends: libv4lconvert0:armhf (= 1.18.0-2build1) but it is not installable
+          #                     Depends: libv4l2rds0:armhf (= 1.18.0-2build1) but it is not installable
+          # it then installs gcc so it looks like its doing something
+          # but in reality it just skips liblang anb v4l
+          # libclang is nowhere to be seen, and is suspect that libv4l is the same
+          # nada is the same issue. installing the clang bin does nothing
+          # using cross just takes me back to square one.
+          # i think i need to make another forum post
+          #
+          # this has been single worst bug i have ever enountered
+          # its probobly childsplay for some but i cant figure it out
       - name: "compile backend"
         uses: actions-rs/cargo@v1
         with:
@@ -110,12 +136,12 @@ jobs:
 
       - name: create pkg structure
         run: |
-          mkdir -p .debpkg/usr/local/bin
-          # for some reson no one uses /usr/local/etc
-          mkdir -p .debpkg/etc/wifi-car
+          mkdir -p .debpkg/usr/bin
+          mkdir -p .debpkg/usr/lib/wifi-car
           mkdir -p .debpkg/etc/systemd/system
-          mv ./target/${{ matrix.job.target }}/release/backend .debpkg/usr/local/bin/wifi-car
           mkdir -p .debpkg/DEBIAN
+
+          mv ./target/${{ matrix.job.target }}/release/backend .debpkg/usr/local/bin/wifi-car
           cp scripts/wifi-car.service .debpkg/etc/systemd/system/
           cp scripts/postinst.sh .debpkg/DEBIAN/postinst
           cp scripts/preinst.sh .debpkg/DEBIAN/preinst
@@ -123,7 +149,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: frontend
-          path: .debpkg/etc/wifi-car/
+          path: .debpkg/usr/lib/wifi-car/
 
       - uses: jiro4989/build-deb-action@v2
         with:

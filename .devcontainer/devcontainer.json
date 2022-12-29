@@ -12,7 +12,7 @@
         "rangav.vscode-thunder-client"
       ],
       "settings": {
-        "files.autoSave": false
+        "files.autoSave": "off"
       }
     }
   }
