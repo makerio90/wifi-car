@@ -9,11 +9,11 @@ pub trait Peripheral {
     fn init<'a>(config: Self::Config<'a>) -> Self;
 
     /// list all editable options
-    fn config_get(&self) -> Vec<Value<ConfigValue>>;
+    fn config_get(&self) -> Vec<Value<ConfigStruct>>;
 
     /// runtime config
     /// things you would want to updtate at runtime.
-    fn config_set(&mut self, id: u8, value: ConfigValue) -> PerError<()>;
+    fn config_set(&mut self, id: u8, value: ConfigStruct) -> PerError<()>;
 
     /// rc values
     fn rc(&self) -> Vec<Value<RcValue>>;
@@ -23,6 +23,7 @@ pub trait Peripheral {
     /// they will be sent in `id` order
     fn send(&mut self, values: Vec<RcValue>);
 }
+
 #[derive(Serialize)]
 pub enum RcValue {
     /// analog value between 0 - 1
@@ -39,12 +40,11 @@ pub struct Value<T> {
     pub name: String,
     /// value
     pub value: T,
-    /// id
-    pub id: u8,
 }
 
+/// structure for a config value
 #[derive(Serialize, Deserialize)]
-pub enum ConfigValue {
+pub enum ConfigStruct {
     /// number between min an max
     Num { value: i32, min: u16, max: u16 },
     /// string
@@ -56,6 +56,7 @@ pub enum ConfigValue {
     /// momentary, like a reset button
     Momentary,
 }
+
 pub type PerError<T> = Result<T, PeripheralError>;
 pub enum PeripheralError {
     BadId,
