@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use drivers::peripheral::{ConfigValue, Peripheral};
+use drivers::peripheral::{ConfigStruct, Peripheral};
 
 use super::PeripheralMap;
 
@@ -16,7 +16,7 @@ pub async fn get(
 pub async fn set(
     peripheral: String,
     id: u8,
-    config: ConfigValue,
+    config: ConfigStruct,
     peripherals: PeripheralMap,
 ) -> Result<impl warp::Reply, Infallible> {
     let mut peripherals = peripherals.lock().unwrap();

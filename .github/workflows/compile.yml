@@ -69,8 +69,8 @@ jobs:
           #- target: x86_64-unknown-linux-gnu
           #  arch: amd64
           #  foreign: false
-          - target: armv7-unknown-linux-gnueabihf
-            arch: armhf
+          - target: aarch64-unknown-linux-gnu
+            arch: arm64
             foreign: true
     steps:
       - uses: actions/checkout@v2

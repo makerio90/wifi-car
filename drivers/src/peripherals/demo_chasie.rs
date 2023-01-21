@@ -24,7 +24,7 @@ impl Default for Demo {
         })
     }
 }
-impl Driver for Demo {
+impl Peripheral for Demo {
     fn enable(&mut self) -> Result<()> {
         self.enabled = true;
         info!(target: "DemoDriver", "enabled!");
