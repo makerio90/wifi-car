@@ -1,45 +1,64 @@
-use crate::driver::{Driver, DriverError, Result};
+use crate::peripheral::{
+    ConfigReturn, ConfigStruct, ConfigValue, PerError, Peripheral, PeripheralError,
+};
 use log::info;
 use serde_derive::Deserialize;
 /// demo driver for testing
 pub struct Demo {
     enabled: bool,
+    print: String,
 }
 #[derive(Debug, Deserialize)]
 pub struct Config {
     printme: String,
 }
 
-impl Demo {
-    pub fn new(config: Config) -> Self {
-        info!(target: "DemoDriver", "{}", config.printme);
-        Demo { enabled: false }
-    }
-}
-
-impl Default for Demo {
-    fn default() -> Self {
-        Self::new(Config {
-            printme: "new from default trait".to_string(),
-        })
-    }
-}
 impl Peripheral for Demo {
-    fn enable(&mut self) -> Result<()> {
-        self.enabled = true;
+    type Config<'a> = Config;
+    fn init<'a>(config: Self::Config<'a>) -> Self {
         info!(target: "DemoDriver", "enabled!");
-        Ok(())
-    }
-    fn is_ready(&self) -> bool {
-        self.enabled
-    }
-    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(-1.0..=1.0).contains(&accelerate) || !(-1.0..=1.0).contains(&steer) {
-            return Err(DriverError::OutOfRange);
+        Self {
+            enabled: true,
+            print: config.printme,
         }
-        if !self.enabled {
-            return Err(DriverError::NotEnabled);
+    }
+    fn config_get(&self) -> Vec<ConfigStruct> {
+        vec![ConfigStruct {
+            name: "print".to_string(),
+            id: 0,
+            value: ConfigValue::Momentary,
+            discription: Some("print the value written in the config file".to_string()),
+            disabled: false,
+        }]
+    }
+    fn config_set(&mut self, id: u8, value: ConfigReturn) -> PerError<()> {
+        match id {
+            0 => {
+                if let ConfigReturn::Momentary = value {
+                    info!(target: "DemoDriver", "{}", self.print);
+                    Ok(())
+                } else {
+                    Err(PeripheralError::WrongType)
+                }
+            }
+            _ => Err(PeripheralError::BadId),
         }
+    }
+
+    fn rc(&self) -> Vec<String> {
+        vec!["Accelerate".to_string(), "Steer".to_string()]
+    }
+
+    fn send(&mut self, values: Vec<u16>) {
+        let (accelerate, steer) = if let [accelerate, steer] = values[0..3] {
+            (accelerate, steer)
+        } else {
+            todo!()
+        };
+
+        let accelerate = accelerate as f64 * 200.0 / 65535.0 - 100.0;
+        let steer = steer as f64 * 200.0 / 65535.0 - 100.0;
+
         let drive_speed = accelerate.abs() * 100.0;
         let steer_amount = steer.abs() * 100.0;
         let drive_dir = if accelerate.is_sign_negative() {
@@ -60,11 +79,5 @@ impl Peripheral for Demo {
             steer_dir,
             steer_amount,
         );
-        Ok(())
-    }
-    fn disable(&mut self) -> Result<()> {
-        self.enabled = false;
-        info!(target: "Dummy", "disabled;");
-        Ok(())
     }
 }

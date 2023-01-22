@@ -65,4 +65,5 @@ pub type PerError<T> = Result<T, PeripheralError>;
 pub enum PeripheralError {
     BadId,
     WrongType,
+    OutOfRange,
 }

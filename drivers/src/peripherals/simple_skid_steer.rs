@@ -16,8 +16,6 @@ pub struct SkidSteer {
     pub rva_pin: u8,
     /// motor driver b reverse pin
     pub rvb_pin: u8,
-    /// is the driver enabled
-    is_enabled: bool,
     /// output pin object for driver a enable pin
     ena: Option<OutputPin>,
     /// output pin object for driver b enable pin
@@ -36,55 +34,46 @@ pub struct Config {
     rva_pin: u8,
     rvb_pin: u8,
 }
-impl SkidSteer {
-    pub fn new(config: Config) -> Self {
+
+impl Peripheral for SkidSteer {
+    type Config<'a> = DemoConfig;
+    fn init<'a>(config: Self::Config<'a>) -> Self {
+        let gpio = Gpio::new()?;
+        let ena = Some(
+            gpio.as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
+                .get(self.ena_pin)?
+                .into_output(),
+        );
+        let enb = Some(
+            gpio.as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
+                .get(self.enb_pin)?
+                .into_output(),
+        );
+        let rva = Some(
+            gpio.as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
+                .get(self.rva_pin)?
+                .into_output(),
+        );
+        let rvb = Some(
+            gpio.as_mut()
+                .ok_or(DriverError::ExpectedSomeFoundNone)?
+                .get(self.rvb_pin)?
+                .into_output(),
+        );
         Self {
             ena_pin: config.ena_pin,
             enb_pin: config.enb_pin,
             rva_pin: config.rva_pin,
             rvb_pin: config.rvb_pin,
-            is_enabled: false,
             ena: None,
             enb: None,
             rva: None,
             rvb: None,
             gpio: None,
         }
-    }
-}
-impl Driver for SkidSteer {
-    fn enable(&mut self) -> Result<()> {
-        self.gpio = Some(Gpio::new()?);
-        self.ena = Some(
-            self.gpio
-                .as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.ena_pin)?
-                .into_output(),
-        );
-        self.enb = Some(
-            self.gpio
-                .as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.enb_pin)?
-                .into_output(),
-        );
-        self.rva = Some(
-            self.gpio
-                .as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.rva_pin)?
-                .into_output(),
-        );
-        self.rvb = Some(
-            self.gpio
-                .as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.rvb_pin)?
-                .into_output(),
-        );
-        self.is_enabled = true;
-        Ok(())
     }
     fn is_ready(&self) -> bool {
         self.is_enabled

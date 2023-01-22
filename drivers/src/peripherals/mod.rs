@@ -1,3 +1,4 @@
+pub mod demo_chasie;
 pub mod demo_peripheral;
 use crate::peripheral::{ConfigStruct, Peripheral};
 use serde::Deserialize;

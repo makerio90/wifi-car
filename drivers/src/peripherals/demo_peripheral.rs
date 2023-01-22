@@ -28,7 +28,7 @@ impl Peripheral for Demo {
                 name: "a value".to_string(),
                 id: 0,
                 value: ConfigValue::Num(0, 100, 1),
-                discription: "anywhere from 0 to 100",
+                discription: Some("anywhere from 0 to 100".to_string()),
                 disabled: false,
             },
             ConfigStruct {
