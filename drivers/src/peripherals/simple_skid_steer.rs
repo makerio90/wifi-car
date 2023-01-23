@@ -1,4 +1,4 @@
-use crate::driver::{Driver, DriverError, Result};
+use crate::peripheral::{ConfigReturn, ConfigStruct, PerError, Peripheral, PeripheralError};
 use rppal::gpio::{Gpio, OutputPin};
 use serde_derive::Deserialize;
 // simple skid steer car using L298P drivers
@@ -17,15 +17,15 @@ pub struct SkidSteer {
     /// motor driver b reverse pin
     pub rvb_pin: u8,
     /// output pin object for driver a enable pin
-    ena: Option<OutputPin>,
+    ena: OutputPin,
     /// output pin object for driver b enable pin
-    enb: Option<OutputPin>,
+    enb: OutputPin,
     /// output pin object for driver a reverse pin
-    rva: Option<OutputPin>,
+    rva: OutputPin,
     /// output pin object for driver b reverse pin
-    rvb: Option<OutputPin>,
+    rvb: OutputPin,
     /// gpio object
-    gpio: Option<Gpio>,
+    gpio: Gpio,
 }
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -36,95 +36,53 @@ pub struct Config {
 }
 
 impl Peripheral for SkidSteer {
-    type Config<'a> = DemoConfig;
-    fn init<'a>(config: Self::Config<'a>) -> Self {
+    type Config<'a> = Config;
+    fn init<'a>(config: Self::Config<'a>) -> PerError<Self> {
         let gpio = Gpio::new()?;
-        let ena = Some(
-            gpio.as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.ena_pin)?
-                .into_output(),
-        );
-        let enb = Some(
-            gpio.as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.enb_pin)?
-                .into_output(),
-        );
-        let rva = Some(
-            gpio.as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.rva_pin)?
-                .into_output(),
-        );
-        let rvb = Some(
-            gpio.as_mut()
-                .ok_or(DriverError::ExpectedSomeFoundNone)?
-                .get(self.rvb_pin)?
-                .into_output(),
-        );
-        Self {
+        let ena = gpio.get(config.ena_pin)?.into_output();
+        let enb = gpio.get(config.enb_pin)?.into_output();
+        let rva = gpio.get(config.rva_pin)?.into_output();
+        let rvb = gpio.get(config.rvb_pin)?.into_output();
+        Ok(Self {
             ena_pin: config.ena_pin,
             enb_pin: config.enb_pin,
             rva_pin: config.rva_pin,
             rvb_pin: config.rvb_pin,
-            ena: None,
-            enb: None,
-            rva: None,
-            rvb: None,
-            gpio: None,
-        }
+            ena,
+            enb,
+            rva,
+            rvb,
+            gpio,
+        })
     }
-    fn is_ready(&self) -> bool {
-        self.is_enabled
+    fn config_get(&self) -> Vec<ConfigStruct> {
+        vec![]
     }
-    fn disable(&mut self) -> Result<()> {
-        if !self.is_enabled {
-            return Err(DriverError::NotEnabled);
-        }
-        self.ena
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .set_low();
-        self.enb
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .set_low();
-        self.is_enabled = false;
-        self.gpio = None;
-        self.ena = None;
-        self.enb = None;
-        self.rva = None;
-        self.rvb = None;
-        Ok(())
+    fn config_set(&mut self, id: u8, value: ConfigReturn) -> PerError<()> {
+        Err(PeripheralError::BadId)
     }
-    fn drive(&mut self, accelerate: f64, steer: f64) -> Result<()> {
-        if !(-1.0..=1.0).contains(&accelerate) || !(-1.0..=1.0).contains(&steer) {
-            return Err(DriverError::OutOfRange);
-        }
-        if !self.is_enabled {
-            return Err(DriverError::NotEnabled);
-        }
+
+    fn rc(&self) -> Vec<String> {
+        vec!["accelerate".to_string(), "steer".to_string()]
+    }
+
+    fn send(&mut self, values: Vec<u16>) -> PerError<()> {
+        let (accelerate, steer) = if let [accelerate, steer] = values[0..3] {
+            (accelerate, steer)
+        } else {
+            todo!()
+        };
+
+        let accelerate = accelerate as f64 * 200.0 / 65535.0 - 100.0;
+        let steer = steer as f64 * 200.0 / 65535.0 - 100.0;
 
         let left = (accelerate - steer).clamp(-1.0, 1.0);
         let right = (accelerate + steer).clamp(-1.0, 1.0);
 
-        self.rva
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .write(left.is_sign_negative().into());
-        self.rvb
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .write(right.is_sign_negative().into());
-        self.ena
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .set_pwm_frequency(100.0, left.abs())?;
-        self.enb
-            .as_mut()
-            .ok_or(DriverError::ExpectedSomeFoundNone)?
-            .set_pwm_frequency(100.0, right.abs())?;
+        self.rva.write(left.is_sign_negative().into());
+        self.rvb.write(right.is_sign_negative().into());
+        self.ena.set_pwm_frequency(100.0, left.abs())?;
+        self.enb.set_pwm_frequency(100.0, right.abs())?;
 
         Ok(())
     }

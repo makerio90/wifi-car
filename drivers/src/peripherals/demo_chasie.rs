@@ -15,12 +15,12 @@ pub struct Config {
 
 impl Peripheral for Demo {
     type Config<'a> = Config;
-    fn init<'a>(config: Self::Config<'a>) -> Self {
+    fn init<'a>(config: Self::Config<'a>) -> PerError<Self> {
         info!(target: "DemoDriver", "enabled!");
-        Self {
+        Ok(Self {
             enabled: true,
             print: config.printme,
-        }
+        })
     }
     fn config_get(&self) -> Vec<ConfigStruct> {
         vec![ConfigStruct {
@@ -49,7 +49,7 @@ impl Peripheral for Demo {
         vec!["Accelerate".to_string(), "Steer".to_string()]
     }
 
-    fn send(&mut self, values: Vec<u16>) {
+    fn send(&mut self, values: Vec<u16>) -> PerError<()> {
         let (accelerate, steer) = if let [accelerate, steer] = values[0..3] {
             (accelerate, steer)
         } else {
@@ -79,5 +79,7 @@ impl Peripheral for Demo {
             steer_dir,
             steer_amount,
         );
+
+        Ok(())
     }
 }

@@ -6,7 +6,9 @@ pub trait Peripheral {
     type Config<'a>: Deserialize<'a>;
 
     ///initalises the peripheral (duh)
-    fn init<'a>(config: Self::Config<'a>) -> Self;
+    fn init<'a>(config: Self::Config<'a>) -> PerError<Self>
+    where
+        Self: Sized;
 
     /// list all editable options
     fn config_get(&self) -> Vec<ConfigStruct>;
@@ -19,7 +21,7 @@ pub trait Peripheral {
     fn rc(&self) -> Vec<String>;
 
     /// send rc values
-    fn send(&mut self, values: Vec<u16>);
+    fn send(&mut self, values: Vec<u16>) -> PerError<()>;
 }
 
 #[derive(Serialize)]
@@ -66,4 +68,11 @@ pub enum PeripheralError {
     BadId,
     WrongType,
     OutOfRange,
+    Gpio(rppal::gpio::Error),
+}
+
+impl From<rppal::gpio::Error> for PeripheralError {
+    fn from(e: rppal::gpio::Error) -> Self {
+        PeripheralError::Gpio(e)
+    }
 }

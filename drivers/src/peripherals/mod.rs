@@ -1,6 +1,7 @@
 pub mod demo_chasie;
 pub mod demo_peripheral;
-use crate::peripheral::{ConfigStruct, Peripheral};
+pub mod simple_skid_steer;
+use crate::peripheral::{ConfigStruct, PerError, Peripheral};
 use serde::Deserialize;
 
 pub enum Peripherals {
@@ -14,9 +15,9 @@ pub enum PeripheralConfig {
 
 impl Peripheral for Peripherals {
     type Config<'a> = PeripheralConfig;
-    fn init<'a>(config: Self::Config<'a>) -> Self {
+    fn init<'a>(config: Self::Config<'a>) -> PerError<Self> {
         match config {
-            PeripheralConfig::Demo(cfg) => Peripherals::Demo(demo_peripheral::Demo::init(cfg)),
+            PeripheralConfig::Demo(cfg) => Peripherals::Demo(demo_peripheral::Demo::init(cfg)?),
         }
     }
     fn config_set(
@@ -38,7 +39,7 @@ impl Peripheral for Peripherals {
             Peripherals::Demo(per) => per.rc(),
         }
     }
-    fn send(&mut self, values: Vec<u16>) {
+    fn send(&mut self, values: Vec<u16>) -> PerError<()> {
         match self {
             Peripherals::Demo(per) => per.send(values),
         }

@@ -14,13 +14,13 @@ pub struct DemoConfig {
 }
 impl Peripheral for Demo {
     type Config<'a> = DemoConfig;
-    fn init<'a>(config: Self::Config<'a>) -> Self {
+    fn init<'a>(config: Self::Config<'a>) -> PerError<Self> {
         info!(target: "DemoPeripheral", "starting up! {}", config.infocmd);
-        Self {
+        Ok(Self {
             a: 0,
             b: 0,
             string: String::new(),
-        }
+        })
     }
     fn config_get(&self) -> Vec<ConfigStruct> {
         vec![
@@ -75,10 +75,11 @@ impl Peripheral for Demo {
         vec!["b value".to_string(), "Print".to_string()]
     }
 
-    fn send(&mut self, values: Vec<u16>) {
+    fn send(&mut self, values: Vec<u16>) -> PerError<()> {
         self.b = values[0] as u32;
         if values[1] > 2000 {
             info!(target: "DemoPeripheral", "got cmd to print {}", self.string)
         }
+        Ok(())
     }
 }
