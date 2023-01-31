@@ -74,46 +74,7 @@ pub fn write_config(
         .and_then(api::set_config)
 }
 
-pub fn enable(
-    driver: Arc<Mutex<Drivers>>,
-    sessions: Sessions,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path!("api" / "enable")
-        .and(warp::post())
-        .and(needs_auth(sessions))
-        .and(with_driver(driver))
-        .and_then(api::enable)
-}
-
-pub fn disable(
-    driver: Arc<Mutex<Drivers>>,
-    sessions: Sessions,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path!("api" / "disable")
-        .and(warp::post())
-        .and(needs_auth(sessions))
-        .and(with_driver(driver))
-        .and_then(api::disable)
-}
-
-#[derive(Debug, Deserialize)]
-pub struct DriveQuery {
-    accelerate: f64,
-    steer: f64,
-}
-
-pub fn drive(
-    driver: Arc<Mutex<Drivers>>,
-    sessions: Sessions,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path!("api" / "drive")
-        .and(warp::query::<DriveQuery>())
-        .and(warp::post())
-        .and(needs_auth(sessions))
-        .and(with_driver(driver))
-        .and_then(api::drive)
-}
-
+/*
 pub fn drive_ws(
     driver: Arc<Mutex<Drivers>>,
     sessions: Sessions,
@@ -126,17 +87,8 @@ pub fn drive_ws(
             ws.on_upgrade(move |socket| websocket::drive(socket, driver))
         })
 }
+*/
 
-pub fn info(
-    driver: Arc<Mutex<Drivers>>,
-    sessions: Sessions,
-) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path!("api" / "info")
-        .and(warp::get())
-        .and(needs_auth(sessions))
-        .and(with_driver(driver))
-        .and_then(api::info)
-}
 #[derive(Debug)]
 struct Unauthorized;
 
@@ -153,9 +105,4 @@ fn needs_auth(sessions: Sessions) -> impl Filter<Extract = (), Error = Rejection
             }
         })
         .untuple_one()
-}
-fn with_driver(
-    driver: Arc<Mutex<Drivers>>,
-) -> impl Filter<Extract = (Arc<Mutex<Drivers>>,), Error = std::convert::Infallible> + Clone {
-    warp::any().map(move || driver.clone())
 }

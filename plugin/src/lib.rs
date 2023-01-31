@@ -5,24 +5,24 @@
 use serde::Serialize;
 
 pub enum Updates {
-    OnSubmit,
-    OnChange,
-    Time,
+	OnSubmit,
+	OnChange,
+	Time,
 }
 
 pub trait Plugin {
-    /// displays the configuration options of the plugin.
-    type Config: Serialize;
+	/// displays the configuration options of the plugin.
+	type Config: Serialize;
 
-    /// when to update
-    const UPDATE: Updates;
+	/// when to update
+	const UPDATE: Updates;
 
-    /// initalise the plugin with a default config and its settings
-    fn new() -> (Self::Config, Self);
+	/// initalise the plugin with a default config and its settings
+	fn new() -> (Self::Config, Self);
 
-    /// return if the config is within the allowd ranges
-    fn verify(config: Self::Config) -> bool;
+	/// return if the config is within the allowd ranges
+	fn verify(config: Self::Config) -> bool;
 
-    /// set the allowed config
-    fn set(config: Self::Config) -> Result<(), ()>;
+	/// set the allowed config
+	fn set(config: Self::Config) -> Result<(), ()>;
 }
